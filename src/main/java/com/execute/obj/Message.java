@@ -1,8 +1,5 @@
 package com.execute.obj;
 
-import java.util.ArrayList;
-
-import org.json.JSONObject;
 
 public class Message {
 	/* configuration parts */
@@ -142,7 +139,7 @@ public class Message {
     	this.typeOfDriver = "none";
     }   
     
-    public void setRestData(JSONObject obj) {
+    public void setRestData() {
     	
     	this.numHiAbruptTurning = 1;
     	this.numHiAcc = 25;

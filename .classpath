@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry excluding="com/execute/library/" kind="src" path="src/main/java"/>
 	<classpathentry kind="src" path="src/main/resources"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="DROOLS/Drools"/>
-	<classpathentry kind="lib" path="/home/marko/Documents/java-json.jar"/>
+	<classpathentry kind="src" path="resources"/>
+	<classpathentry kind="lib" path="/home/marko/workspace/javplugins/dom4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="/home/marko/workspace/javplugins/iText-2.1.7.jar"/>
+	<classpathentry kind="lib" path="/home/marko/workspace/javplugins/java-json.jar"/>
+	<classpathentry kind="lib" path="/home/marko/workspace/javplugins/JEFFCode.jar"/>
+	<classpathentry kind="lib" path="/home/marko/workspace/javplugins"/>
 	<classpathentry kind="output" path="target"/>
 </classpath>

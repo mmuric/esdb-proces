@@ -1,6 +1,8 @@
-package com.execute
- 
 import com.execute.obj.Message;
+import org.goodoldai.jeff.wizard.JEFFWizard;
+
+global JEFFWizard wizard;
+
 
 // eliminaciona pravila
 rule "Rule-01: If there is no traveled distance, there will be no report"
@@ -134,7 +136,7 @@ rule "Rule-10: set acceleration points for severity level high if numHiAcc is gr
 		m.setPartAccHi(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		System.out.println( "Acc point for severity level midium: " + m.getPartAccHi() );		
+		System.out.println( "Acc point for severity level high: " + m.getPartAccHi() );		
 end
 
 rule "Rule-11: set deceleration points for severity level medium if numMidDec is less than allowed"
@@ -352,12 +354,12 @@ end
 
 
 
-rule "Rule-40: total is smaller than the limit"
+rule "Rule40 total is smaller than the limit"
 	when
 		m: Message( total < limit, typeOfDriver == "none", total: total, limit: limit)
 	then
-		System.out.println( "Ok vozac");
 		float result = (float) ((total/ limit) *100);
+		System.out.println( "Ok vozac " + result);
 		
 		if ( result <= 20 ) {
 			m.setTypeOfDriver("ok");
@@ -369,11 +371,17 @@ rule "Rule-40: total is smaller than the limit"
 			m.setTypeOfDriver("agresive");
 		}
 		
+		Object [] content = new Object[1];
+		content[0] = result;
+		
+		wizard.addTextWarning(null, "Rule40 total is smaller than the limit", content);
+		
+		System.out.println( "Ok vozac " + m.getTypeOfDriver());
+		
 		update(m);
 end
 
 rule "Rule-40: Driver ok AccMid"
-	lock-on-active true
 	when
 		m: Message( typeOfDriver == "ok", partAccMid > 0 )
 	then
@@ -381,6 +389,23 @@ rule "Rule-40: Driver ok AccMid"
 		
 end
 
+rule "Rule-41: Driver ok AccHi"
+	when
+		m: Message( typeOfDriver == "ok", partAccHi > 0 )
+	then
+		System.out.println( "Objasnjenje da je vozac imao dozvoljen broj acc mid dogadjaja po broju km");
+		
+end
+
+rule "Rule-42: Driver risk AccHi"
+	when
+		m: Message( typeOfDriver == "risk", partAccHi > 0 )
+	then
+		System.out.println( "Ovaj vozac je rizican i treba da snosi sankcije");
+		
+end
+
+/*
 rule "Rule-41: total is bigger than the limit"
 	when
 		m: Message( total > limit, typeOfDriver == "none" )
@@ -400,7 +425,7 @@ rule "Rule-42: Driver ok AccMid"
 end
 
 
-
+*/
 
 		
 
