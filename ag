@@ -1,0 +1,46 @@
+Head
+AccHi
+"Ukupan broj dogadjaja 'Harsh acceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Kako bi popravio svoje ponasanje vozac mora smanjiti agresivnost prilikom naglog ubrzanja za " + content[3] + "."
+
+AccMid
+"Ukupan broj dogadjaja 'Harsh acceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Kako bi popravio svoje ponasanje vozac mora smanjiti agresivnost prilikom ubrzanja za " + content[3] + "."
+
+DecHi
+"Ukupan broj dogadjaja 'Harsh deceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Kako bi popravio svoje ponasanje vozac mora smanjiti agresivna nagla kocenja za: " + content[3] + "."
+
+DecMid
+"Ukupan broj dogadjaja 'Harsh deceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Kako bi popravio svoje ponasanje vozac mora smanjiti nagla kocenja za: " + content[3] + "."
+
+CorneringHi
+"Ukupan broj dogadjaja 'Cornering severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Kako bi popravio svoje ponasanje vozac mora smanjiti agresivnost prilikom ulazenja u krivinu za: " + content[3] + "."
+
+CorneringMid
+"Ukupan broj dogadjaja 'Cornering severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Kako bi popravio svoje ponasanje vozac mora smanjiti nagle ulaske u krivinu za: " + content[3] + "."
+
+SpeedLimit
+"Ukupan broj dogadjaja 'Speed limit notification' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj predstavlja direktno krsenje pravila ponasanja vlasnika flote. Prelazak dozvoljenog limita direktno krsi pravila kompanije i kao takvo treba biti sankcionisano."
+
+AbruptTurningHi
+"Ukupan broj dogadjaja 'Abrupt turning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise ako vozac gubi kontrolu nad vozilom prilikom skretanja. Pojava ovog dogadjaja u ukupnoj sumi negativnih bodova govori nam o tome da vozac ozbiljno ugrozava svoju bezbednost."
+
+AggressiveLaneChangeHi
+"Ukupan broj dogadjaja 'Aggressive lane change severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise ukoliko vozac veoma agresivno zaobilazi vozilo ili grupu vozila. Ucesca ovog dogadjaja u ukupnoj sumi pokazuje nam da je vozac izuzetno agresivan prilikom zaobilazenja drugih ucesnika u saobracaju. Na ovaj nacin vozac ugrozava kako sebe tako i druge ucesnike u saobracaju."
+
+AggressiveLaneChangeMid
+"Ukupan broj dogadjaja 'Aggressive lane change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise ukoliko vozac agresivno zaobilazi vozilo ili grupu vozila. Ucesca ovog dogadjaja u ukupnoj sumi pokazuje nam da je vozac agresivan prilikom zaobilazenja drugih ucesnika u saobrcaju i da na taj nacin ugrozava kako svoju tako i bezbednost drugih."
+
+BarrierAvoidanceHi
+"Ukupan broj dogadjaja 'Barrier avoidance severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise u slucaju kada vozac naglo pokusa da zaobidje prepreku na putu, pri tome praveci putanju u obliku latinicnog slova s. Ovaj dogadjaj ukazuje na veoma ozbiljan gubitak kontrole nad vozilom. Pojava ovog dogadjaja u totalnoj sumi negativnih bodova, ukazuje da je vozac veoma ne pazljiv i da time ugrozava bezbednost u saobracaju."
+
+BarrierAvoidanceMid
+"Ukupan broj dogadjaja 'Barrier avoidance change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise u slucaju kada vozac pokusa da zaobidje prepreku na putu, pri tome praveci putanju u obliku latinicnog slova s. Ovaj dogadjaj ukazuje na gubitak kontrole nad vozilom. Pojava ovog dogadjaja u totalnoj sumi negativnih bodova, ukazuje da je vozac ne pazljiv u upravljanju vozilom i da time ugrozava bezbednost u saobracaju."
+
+SkiddingHi
+"Ukupan broj dogadjaja 'Vehicle skidding severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Ovaj dogadjaj se generise kada vozilu pri ulasku u krivinu prokliza zadnji deo u odnosu na prednji (over-steering). Ovo uzrokuje nestabilnost vozila. Pojava ovog dogadjaja u ukupnoj negativnoj sumi znaci da vozac ugrozava bezbednost saobracaja veoma svojim agresivnim ponasanjem."
+
+SpinningHiAllowed
+"Ukupan broj dogadjaja 'Vehicle Spinning Allowed severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovi dogadjaji desili su se u periodu izmedju " + content[3] + " i " + content[3] + ". Ovde treba kao olaksavajucu okolnost uzeti vremenske uslove."
+
+SpinningHiNotAllowed
+"Ukupan broj dogadjaja 'Vehicle Spinning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj predstavlja najtezi indikator da je vozilo van kontrole vozaca. Kako ovaj doga]aj u opste ne sme da se pojavi, ovo indikuje da je vozac potpuno nesmotreno narusio bezbednost prilikom upravljanja vozilom, te stoga treba biti strogo kaznjen." 
+

@@ -1,5 +1,12 @@
 package com.execute.obj;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+
+import com.execute.obj.event.SpeedLimit;
+import com.execute.obj.event.SpinningHi;
+
 
 public class Message {
 	/* configuration parts */
@@ -18,6 +25,14 @@ public class Message {
 	protected float eventPerKmBarrierAvoidanceHi;
 	protected float eventPerKmSpinningHi;
 	protected float eventPerKmSpeedLimit;
+	protected float eventPerKmSpinningHiInWinter;
+
+	//ako je moguc SpinningHi
+	protected boolean possibleSpinningHi;
+	protected String dateFrom;
+	protected String dateTo;
+		
+	
 	// prekoracenja dogadjaja po kilometru [prema grupi dogadjaja]
 	protected float boundaryOfEvents;
 	
@@ -39,6 +54,7 @@ public class Message {
 	protected int limit;
 	protected int maxEvent;
     
+	
     
     
     // sume koje dobijam iz baze podataka
@@ -58,8 +74,11 @@ public class Message {
     protected int numMidBarrierAvoidance;
     protected int numHiBarrierAvoidance;
     protected int numHiSpinning;
+    protected int numHiSpinningAllowed;
+    protected int numHiSpinningNotAllowed;
     protected int numSpeedLimit;
-    
+    protected ArrayList<SpinningHi> spinningList = new ArrayList<SpinningHi>();
+    protected ArrayList<SpeedLimit> speedLimitList = new ArrayList<SpeedLimit>();
     
     // sume negativnih bodova
     protected float total;
@@ -76,10 +95,11 @@ public class Message {
     protected float partDecMid;
     protected float partSkiddingHi;
     protected float partSpeedLimit;
-    protected float partSpinningHi;
+    protected float partSpinningHiAllowed;
+    protected float partSpinningHiNotAllowed;
     
     // rezultati
-    String report;
+    protected String report;
     /**
      * none - no set type of driver
      * ok - safe group
@@ -88,12 +108,32 @@ public class Message {
      * agresive - agresive driver
      * extreme - too agresive driver
      */
-    String typeOfDriver;
+    protected float eventOfLowerImportance;
+    protected float eventOfHighImportance;
+    protected String typeOfDriver;
+    protected String processedAbruptTurningHi = "No";
+    protected String processedAccHi = "No";
+    protected String processedAccMid = "No";
+    protected String processedAggressiveLaneChangeHi = "No";
+    protected String processedAggressiveLaneChangeMid = "No";
+    protected String processedBarrierAvoidanceHi = "No";
+    protected String processedBarrierAvoidanceMid = "No";
+    protected String processedCorneringHi = "No";
+    protected String processedCorneringMid = "No";
+    protected String processedDecHi = "No";
+    protected String processedDecMid = "No";
+    protected String processedSkiddingHi = "No";
+    protected String processedSpeedLimit = "No";
+    protected String processedSpinningHiAllowed = "No";
+    protected String processedSpinningHiNotAllowed = "No";
+    protected String additionallyConclusion1 = "No";
+    protected String additionallyConclusion2 = "No";
+    protected String additionallyConclusion3 = "No";
+	
             
     public Message() {
     	
     	//@todo napuni config promenljive iz nekog config fajla osnova je 1000 km
-    	
     	this.totalEventPerKm = 150;
     	this.eventPerKmAbruptTurningHi = 1;
     	this.eventPerKmAccHi = 10;
@@ -107,10 +147,17 @@ public class Message {
     	this.eventPerKmDecHi = 10;
     	this.eventPerKmDecMid = 15;
     	this.eventPerKmSkiddingHi = 1;
-    	this.eventPerKmSpeedLimit = 46;
+    	this.eventPerKmSpeedLimit = 46; //46
     	this.eventPerKmSpinningHi = 0;
+    	this.eventPerKmSpinningHiInWinter = 2;
+    	
+    	this.possibleSpinningHi = false;
+    	
     	this.testingTraveledDistance = 10;
     	this.kmBase = 1000;
+    	
+    	this.dateFrom = "2014-05-20";
+    	this.dateTo = "2014-05-30";
 
     	this.totalDistanceZeroKm = 0;
     	this.totalDistanceMidKm = 1000;
@@ -133,31 +180,73 @@ public class Message {
     	this.partDecMid = Integer.MIN_VALUE;
     	this.partSkiddingHi = Integer.MIN_VALUE;
     	this.partSpeedLimit = Integer.MIN_VALUE;
-    	this.partSpinningHi = Integer.MIN_VALUE;
+    	this.partSpinningHiAllowed = Integer.MIN_VALUE;
+    	this.partSpinningHiNotAllowed = Integer.MIN_VALUE;
     	
     	this.boundaryOfEvents = (float) 1.5;   
     	this.typeOfDriver = "none";
+    	this.eventOfLowerImportance = Integer.MIN_VALUE;
+    	this.eventOfHighImportance =  Integer.MIN_VALUE;
     }   
     
     public void setRestData() {
     	
-    	this.numHiAbruptTurning = 1;
-    	this.numHiAcc = 25;
+    	this.numHiAbruptTurning = 2;
+    	this.numHiAcc = 20;
     	this.numHiAggressiveLaneChange = 7;
     	this.numHiBarrierAvoidance = 1;
     	this.numHiCornering = 10;
-    	this.numHiDec = 1;
+    	this.numHiDec = 12;
     	this.numHiSkidding = 1;
-    	this.numHiSpinning = 1;
-    	this.numMidAcc = 14;
+    	this.numHiSpinning = 7;
+    	this.numHiSpinningAllowed = Integer.MIN_VALUE;
+    	this.numHiSpinningNotAllowed = Integer.MIN_VALUE;
+    	this.numMidAcc = 11;
     	this.numMidAggressiveLaneChange = 1;
     	this.numMidBarrierAvoidance = 1;
-    	this.numMidCornering = 40;
+    	this.numMidCornering = 37;
     	this.numMidDec = 18;
-    	this.numSpeedLimit = 1;
-    	this.totalTraveledDistance = 1001;
+    	this.numSpeedLimit = 8;
+    	this.totalTraveledDistance = (float)1001.0;
     	this.totalEvents = 160;
     	this.driverId = 1234;
+    	
+//    	SpinningHi sh4 = new SpinningHi("3", "34", "2014-05-10 13:22:40");
+//    	SpinningHi sh5 = new SpinningHi("3", "34", "2014-05-11 13:22:40");
+//    	SpinningHi sh6 = new SpinningHi("3", "34", "2014-05-12 13:22:40");
+//    	SpinningHi sh7 = new SpinningHi("3", "34", "2014-05-13 15:22:40");
+//    	this.spinningList.add(sh4);
+//    	this.spinningList.add(sh5);
+//    	this.spinningList.add(sh6);
+//    	this.spinningList.add(sh7);
+
+    	SpinningHi sh1 = new SpinningHi("3", "34", "2014-05-20 15:22:40");
+    	SpinningHi sh2 = new SpinningHi("3", "34", "2014-05-21 12:22:40");
+    	SpinningHi sh3 = new SpinningHi("3", "34", "2014-05-24 13:22:40");
+    	this.spinningList.add(sh1);
+    	this.spinningList.add(sh2);
+    	this.spinningList.add(sh3);
+    	
+    	SpeedLimit sl1 = new SpeedLimit("9", "93", 60, (float)60.5);
+    	SpeedLimit sl2 = new SpeedLimit("9", "93", 60, 65);
+    	SpeedLimit sl3 = new SpeedLimit("9", "93", 60, 80);
+    	SpeedLimit sl4 = new SpeedLimit("9", "93", 60, 92);
+    	SpeedLimit sl5 = new SpeedLimit("9", "93", 60, 61);
+    	SpeedLimit sl6 = new SpeedLimit("9", "93", 60, 105);
+    	SpeedLimit sl7 = new SpeedLimit("9", "93", 60, 66);
+    	SpeedLimit sl8 = new SpeedLimit("9", "93", 60, 140);
+    	
+    	this.speedLimitList.add(sl1);
+    	this.speedLimitList.add(sl2);
+    	this.speedLimitList.add(sl3);
+    	this.speedLimitList.add(sl4);
+    	this.speedLimitList.add(sl5);
+    	this.speedLimitList.add(sl6);
+    	this.speedLimitList.add(sl7);
+    	this.speedLimitList.add(sl8);
+    	
+    	System.out.println(this.speedLimitList.size());
+    	
     }
 
     
@@ -222,12 +311,54 @@ public class Message {
 	public int getNumHiSpinning() {
 		return numHiSpinning;
 	}
+	
+	public int getNumHiSpinningAllowed() {
+		return numHiSpinningAllowed;
+	}	
+	
+	public void setNumSpeedLimit(int numSpeedLimit) {
+		this.numSpeedLimit = numSpeedLimit;
+	}
+	
+	public void setNumHiSpinningAllowed(int numHiSpinningAllowed) {
+		this.numHiSpinningAllowed = numHiSpinningAllowed;
+	}
+
+	public void setNumHiSpinningNotAllowed(int numHiSpinningNotAllowed) {
+		this.numHiSpinningNotAllowed = numHiSpinningNotAllowed;
+	}
+
+	public int getNumHiSpinningNotAllowed() {
+		return numHiSpinningNotAllowed;
+	}
 
 	public int getNumSpeedLimit() {
 		return numSpeedLimit;
 	}
-
 	
+	public ArrayList<SpinningHi> getSpinningList() {
+		return spinningList;
+	}
+	
+	public ArrayList<SpeedLimit> getSpeedLimitList() {
+		return speedLimitList;
+	}
+
+	public String getDateFrom() {
+		return dateFrom;
+	}
+
+	public String getDateTo() {
+		return dateTo;
+	}
+
+	public boolean isPossibleSpinningHi() {
+		return possibleSpinningHi;
+	}
+
+	public void setPossibleSpinningHi(boolean possibleSpinningHi) {
+		this.possibleSpinningHi = possibleSpinningHi;
+	}
 
 	// seteri i geteri za izvestaj
 	public void setReport(String txt) {
@@ -259,8 +390,8 @@ public class Message {
 	}
 
 	
-	public float getTotal() {
-		return total;
+	public int getTotal() {
+		return (int) total;
 	}
 
 	public float getPartAbruptTurningHi() {
@@ -315,10 +446,14 @@ public class Message {
 		return partSpeedLimit;
 	}
 
-	public float getPartSpinningHi() {
-		return partSpinningHi;
+	public float getPartSpinningHiAllowed() {
+		return partSpinningHiAllowed;
 	}
 
+	public float getPartSpinningHiNotAllowed() {
+		return partSpinningHiNotAllowed;
+	}
+	
 	public void setTotal(float total) {
 		this.total = total;
 	}	
@@ -375,8 +510,12 @@ public class Message {
 		this.partSpeedLimit = partSpeedLimit;
 	}
 
-	public void setPartSpinningHi(float partSpinningHi) {
-		this.partSpinningHi = partSpinningHi;
+	public void setPartSpinningHiAllowed(float partSpinningHi) {
+		this.partSpinningHiAllowed = partSpinningHi;
+	}
+	
+	public void setPartSpinningHiNotAllowed(float partSpinningHi) {
+		this.partSpinningHiNotAllowed = partSpinningHi;
 	}
 
 	public int getDriverId() {
@@ -448,6 +587,175 @@ public class Message {
 		return eventPerKmSpeedLimit;
 	}
 	
+	public float getEventPerKmSpinningHiInWinter() {
+		return eventPerKmSpinningHiInWinter;
+	}
+
+	public String getProcessedAbruptTurningHi() {
+		return processedAbruptTurningHi;
+	}
+
+	public String getProcessedAccHi() {
+		return processedAccHi;
+	}
+
+	public String getProcessedAccMid() {
+		return processedAccMid;
+	}
+
+	public String getProcessedAggressiveLaneChangeHi() {
+		return processedAggressiveLaneChangeHi;
+	}
+
+	public String getProcessedAggressiveLaneChangeMid() {
+		return processedAggressiveLaneChangeMid;
+	}
+
+	public String getProcessedBarrierAvoidanceHi() {
+		return processedBarrierAvoidanceHi;
+	}
+
+	public String getProcessedBarrierAvoidanceMid() {
+		return processedBarrierAvoidanceMid;
+	}
+
+	public String getProcessedCorneringHi() {
+		return processedCorneringHi;
+	}
+
+	public String getProcessedCorneringMid() {
+		return processedCorneringMid;
+	}
+
+	public String getProcessedDecHi() {
+		return processedDecHi;
+	}
+
+	public String getProcessedDecMid() {
+		return processedDecMid;
+	}
+
+	public String getProcessedSkiddingHi() {
+		return processedSkiddingHi;
+	}
+
+	public String getProcessedSpeedLimit() {
+		return processedSpeedLimit;
+	}
+
+	public String getProcessedSpinningHiAllowed() {
+		return processedSpinningHiAllowed;
+	}
+
+	public String getProcessedSpinningHiNotAllowed() {
+		return processedSpinningHiNotAllowed;
+	}
+		
+	public void setProcessedAbruptTurningHi(String processedAbruptTurningHi) {
+		this.processedAbruptTurningHi = processedAbruptTurningHi;
+	}
+
+	public void setProcessedAccHi(String processedAccHi) {
+		this.processedAccHi = processedAccHi;
+	}
+
+	public void setProcessedAccMid(String processedAccMid) {
+		this.processedAccMid = processedAccMid;
+	}
+
+	public void setProcessedAggressiveLaneChangeHi(
+			String processedAggressiveLaneChangeHi) {
+		this.processedAggressiveLaneChangeHi = processedAggressiveLaneChangeHi;
+	}
+
+	public void setProcessedAggressiveLaneChangeMid(
+			String processedAggressiveLaneChangeMid) {
+		this.processedAggressiveLaneChangeMid = processedAggressiveLaneChangeMid;
+	}
+
+	public void setProcessedBarrierAvoidanceHi(String processedBarrierAvoidanceHi) {
+		this.processedBarrierAvoidanceHi = processedBarrierAvoidanceHi;
+	}
+
+	public void setProcessedBarrierAvoidanceMid(String processedBarrierAvoidanceMid) {
+		this.processedBarrierAvoidanceMid = processedBarrierAvoidanceMid;
+	}
+
+	public void setProcessedCorneringHi(String processedCorneringHi) {
+		this.processedCorneringHi = processedCorneringHi;
+	}
+
+	public void setProcessedCorneringMid(String processedCorneringMid) {
+		this.processedCorneringMid = processedCorneringMid;
+	}
+
+	public void setProcessedDecHi(String processedDecHi) {
+		this.processedDecHi = processedDecHi;
+	}
+
+	public void setProcessedDecMid(String processedDecMid) {
+		this.processedDecMid = processedDecMid;
+	}
+
+	public void setProcessedSkiddingHi(String processedSkiddingHi) {
+		this.processedSkiddingHi = processedSkiddingHi;
+	}
+
+	public void setProcessedSpeedLimit(String processedSpeedLimit) {
+		this.processedSpeedLimit = processedSpeedLimit;
+	}
+
+	public void setProcessedSpinningHiAllowed(String processedSpinningHiAllowed) {
+		this.processedSpinningHiAllowed = processedSpinningHiAllowed;
+	}
+
+	public void setProcessedSpinningHiNotAllowed(
+			String processedSpinningHiNotAllowed) {
+		this.processedSpinningHiNotAllowed = processedSpinningHiNotAllowed;
+	}
+	
+	
+
+	public String getAdditionallyConclusion1() {
+		return additionallyConclusion1;
+	}
+
+	public String getAdditionallyConclusion2() {
+		return additionallyConclusion2;
+	}
+
+	public String getAdditionallyConclusion3() {
+		return additionallyConclusion3;
+	}
+
+	public void setAdditionallyConclusion1(String additionallyConclusion1) {
+		this.additionallyConclusion1 = additionallyConclusion1;
+	}
+
+	public void setAdditionallyConclusion2(String additionallyConclusion2) {
+		this.additionallyConclusion2 = additionallyConclusion2;
+	}
+
+	public void setAdditionallyConclusion3(String additionallyConclusion3) {
+		this.additionallyConclusion3 = additionallyConclusion3;
+	}
+
+	public float getEventOfLowerImportance() {
+		return eventOfLowerImportance;
+	}
+
+	public float getEventOfHighImportance() {
+		return eventOfHighImportance;
+	}
+
+	public void setEventOfLowerImportance(float eventOfLowerImportance) {
+		this.eventOfLowerImportance = eventOfLowerImportance;
+	}
+
+	public void setEventOfHighImportance(float eventOfHighImportance) {
+		this.eventOfHighImportance = eventOfHighImportance;
+	}
+
 	// geteri za prekoracenja u sumama
 	public float getBoundaryOfEvents() {
 		return boundaryOfEvents;

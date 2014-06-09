@@ -37,15 +37,10 @@ public class DroolsTest {
             kSession.setGlobal("wizard", wizard);            
             kSession.insert(message);
             kSession.fireAllRules();
+
+            wizard.generateTXTReport("textReport.txt",false);
             
-            Explanation expl = wizard.getExplanation();
-            System.out.println(expl.getLanguage() + "\n" + expl.getCountry());
-            for (ExplanationChunk string : expl.getChunks()) {
-				System.out.println(string.getRule() +" " + string.getContent());
-			}
-//            wizard.generateTXTReport("textReport.txt",false);
-            
-//            System.out.println("limit:\t" + message.getLimit() + "\t\ntotal:\t" + message.getTotal());
+            System.out.println("limit:\t" + message.getLimit() + "\t\ntotal:\t" + message.getTotal());
         } catch (Throwable t) {
             t.printStackTrace();
         }
