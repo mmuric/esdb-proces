@@ -421,6 +421,15 @@ rule "Rule 34 not allowed spinning"
 		update(m);
 end
 
+rule "Rule 35 set speed limit points if numSpeedLimit is less than allowed"
+	when
+		m : Message( (float)(numSpeedLimit/totalTraveledDistance) <= (float)(eventPerKmSpeedLimit/kmBase), partSpeedLimit  == Integer.MIN_VALUE ) 
+	then
+		m.setPartSpeedLimit(0);
+		update(m);
+		System.out.println( "Ovo je speed limit: " + m.getPartBarrierAvoidanceHi() );
+end
+
 rule "Rule 35 set negative points for speed limit"
 	when
 		m: Message((float)(numSpeedLimit/totalTraveledDistance) > (float)(eventPerKmSpeedLimit/kmBase), partSpeedLimit == Integer.MIN_VALUE) 
@@ -526,21 +535,271 @@ end
 
 rule "Rule 41 Postavi eventOfLowerImportance"
 	when
-		m: Message( total > 0, eventOfLowerImportance == Integer.MIN_VALUE )
+		m: Message( total > 0, eventOfLowerImportance == Integer.MIN_VALUE, limit: limit )
 	then
-		m.setEventOfLowerImportance((float)0.01);
+		float lowImportance = (m.getPartAccHi()/limit + m.getPartAccMid()/limit + m.getPartDecHi()/limit + m.getPartDecMid()/limit + m.getPartCorneringHi()/limit + m.getPartCorneringMid()/limit + m.getPartSpeedLimit()/limit) / 7;
+		
+		System.out.println(lowImportance);
+		
+		m.setEventOfLowerImportance((float)lowImportance);
 		update(m);
 end
 
 rule "Rule 42 Postavi eventOfHighImportance"
 	when
-		m: Message( total > 0, eventOfHighImportance == Integer.MIN_VALUE )
+		m: Message( total > 0, eventOfHighImportance == Integer.MIN_VALUE, limit: limit )
 	then
-		m.setEventOfHighImportance((float)0.01);
+		float highImportance = (m.getPartAbruptTurningHi()/limit + m.getPartAggressiveLaneChangeHi()/limit + m.getPartAggressiveLaneChangeMid()/limit + m.getPartBarrierAvoidanceHi()/limit + m.getPartBarrierAvoidanceMid()/limit + m.getPartSkiddingHi()/limit) / 6;
+			
+		System.out.println(highImportance);
+		
+		m.setEventOfHighImportance(highImportance);
 		update(m);
 end
 
 // da li ucestvuje u ukupnoj sumi preko 50%, koji je tip drivera, da li je obradjivan
+
+rule "Rule 76 Set text for SpinningHiAllowed if driver is agresive"
+	when
+		m: Message( partSpinningHiAllowed > 0, processedSpinningHiAllowed == "No")
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[5];
+		content[0] = m.getNumHiSpinningAllowed();
+		content[1] = m.getPartSpinningHiAllowed();
+		content[2] = df.format((m.getPartSpinningHiAllowed() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Vehicle Spinning Allowed severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovi dogadjaji desili su se u periodu izmedju " + content[3] + " i " + content[4] + ". Ovde treba kao olaksavajucu okolnost uzeti vremenske uslove.");
+		
+		Date dateFrom = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateFrom() + " 00:00:00"); 
+		Date dateTo = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateTo() + " 00:00:00");
+		
+		for(SpinningHi sh : m.getSpinningList()) {
+			Date datetimeTriggered = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(sh.getDatetimeTriggered());
+			if ( dateFrom.before(datetimeTriggered) && dateTo.after(datetimeTriggered) ) {
+				System.out.println("Neko suntavo objasnjenje\t" + sh.getDatetimeTriggered() + "\tmax speed\tduration");
+			}
+		}
+		
+		m.setProcessedSpinningHiAllowed("Yes");
+		update(m);
+end 
+
+rule "Rule 77 Execute spinning rule"
+	when
+		m: Message( partSpinningHiNotAllowed > 0, processedSpinningHiNotAllowed == "No" )
+	then
+		Object [] content = new Object[5];
+		System.out.println("Ovako");
+		
+		Date dateFrom = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateFrom() + " 00:00:00"); 
+		Date dateTo = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateTo() + " 00:00:00");
+		
+		for(SpinningHi sh : m.getSpinningList()) {
+			Date datetimeTriggered = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(sh.getDatetimeTriggered());
+			if ( datetimeTriggered.before(dateFrom) || datetimeTriggered.after(dateTo) ) {
+				System.out.println("Neko suntavo objasnjenje\t" + sh.getDatetimeTriggered() + "\tmax speed\tduration");
+			}
+		}	
+		
+		m.setProcessedSpinningHiNotAllowed("Yes");
+		update(m);	
+end
+
+rule "Rule 43 Set text for AccHi for ok driver behavior"
+	when
+		m: Message( typeOfDriver == "ok" , partAccHi/total > eventOfLowerImportance, processedAccHi == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[4];
+		content[0] = m.getNumHiAcc();
+		content[1] = m.getPartAccHi();
+		content[2] = df.format((m.getPartAccHi() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Harsh acceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		m.setProcessedAccHi("Yes");
+		update(m);
+end 
+
+rule "Rule 44 Set text for AccMid for ok driver behavior"
+	when
+		m: Message( typeOfDriver == "ok" , partAccMid/total > eventOfLowerImportance, processedAccMid == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[4];
+		content[0] = m.getNumMidAcc();
+		content[1] = m.getPartAccMid();
+		content[2] = df.format((m.getPartAccMid() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Harsh acceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		m.setProcessedAccMid("Yes");
+		update(m);
+end 
+
+rule "Rule 45 Set text for DecHi for ok driver behavior"
+	when
+		m: Message( typeOfDriver == "ok" , partDecHi/total > eventOfLowerImportance, processedDecHi == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[4];
+		content[0] = m.getNumHiDec();
+		content[1] = m.getPartDecHi();
+		content[2] = df.format((m.getPartDecHi() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Harsh deceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		m.setProcessedDecHi("Yes");
+		update(m);
+end
+
+rule "Rule 46 Set text for DecMid for ok driver behavior"
+	when
+		m: Message( typeOfDriver == "ok" , partDecMid/total > eventOfLowerImportance, processedDecMid == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[4];
+		content[0] = m.getNumMidDec();
+		content[1] = m.getPartDecMid();
+		content[2] = df.format((m.getPartDecMid() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Harsh deceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		m.setProcessedDecMid("Yes");
+		update(m);
+end
+
+rule "Rule 47 Set text for CorneringHi for ok driver behavior"
+	when
+		m: Message( typeOfDriver == "ok" , partCorneringHi/total > eventOfLowerImportance, processedCorneringHi == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[4];
+		content[0] = m.getNumHiCornering();
+		content[1] = m.getPartCorneringHi();
+		content[2] = df.format((m.getPartCorneringHi() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		m.setProcessedCorneringHi("Yes");
+		update(m);
+end
+
+rule "Rule 48 Set text for CorneringMid for ok driver behavior"
+	when
+		m: Message( typeOfDriver == "ok" , partCorneringMid/total > eventOfLowerImportance, processedCorneringMid == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[4];
+		content[0] = m.getNumMidCornering();
+		content[1] = m.getPartCorneringMid();
+		content[2] = df.format((m.getPartCorneringMid() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		m.setProcessedCorneringMid("Yes");
+		update(m);
+end
+
+rule "Rule 49 Set text for Speed limit for ok driver behavior"
+	when
+		m: Message( typeOfDriver == "ok" , partSpeedLimit/total > eventOfLowerImportance, processedSpeedLimit == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[3];
+		content[0] = m.getNumSpeedLimit();
+		content[1] = m.getPartSpeedLimit();
+		content[2] = df.format((m.getPartSpeedLimit() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Speed limit notification' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		m.setProcessedSpeedLimit("Yes");
+		update(m);
+end
+
+rule "Rule 50 Set text for AbruptTurningHi for ok driver behavior"
+	when
+		m: Message( typeOfDriver == "ok", partAbruptTurningHi/total > eventOfHighImportance, processedAbruptTurningHi == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[3];
+		content[0] = m.getNumHiAbruptTurning();
+		content[1] = m.getPartAbruptTurningHi();
+		content[2] = df.format((m.getPartAbruptTurningHi() / m.getLimit())*100);	
+		System.out.println("Ukupan broj dogadjaja 'Abrupt turning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
+		m.setProcessedAbruptTurningHi("Yes");
+		update(m);
+end 
+
+rule "Rule 51 Set text for AggressiveLaneChangeHi for ok driver behaviour"
+	when
+		m: Message( typeOfDriver == "ok", partAggressiveLaneChangeHi/total > eventOfHighImportance, processedAggressiveLaneChangeHi == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[3];
+		content[0] = m.getNumHiAggressiveLaneChange();
+		content[1] = m.getPartAggressiveLaneChangeHi();
+		content[2] = df.format((m.getPartAggressiveLaneChangeHi() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Abrupt turning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
+		m.setProcessedAggressiveLaneChangeHi("Yes");
+		update(m);
+end 
+
+rule "Rule 52 Set text for AggressiveLaneChangeMid for ok driver behaviour"
+	when
+		m: Message( typeOfDriver == "ok", partAggressiveLaneChangeMid/total > eventOfHighImportance, processedAggressiveLaneChangeMid == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[3];
+		content[0] = m.getNumMidAggressiveLaneChange();
+		content[1] = m.getPartAggressiveLaneChangeMid();
+		content[2] = df.format((m.getPartAggressiveLaneChangeMid() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Aggressive lane change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise ukoliko vozac agresivno zaobilazi vozilo ili grupu vozila. Ucesca ovog dogadjaja u ukupnoj sumi pokazuje nam da je vozac agresivan prilikom zaobilazenja drugih ucesnika u saobrcaju i da na taj nacin ugrozava kako svoju tako i bezbednost drugih.");
+		m.setProcessedAggressiveLaneChangeMid("Yes");
+		update(m);
+end 
+
+rule "Rule 53 Set text for BarrierAvoidanceHi for ok driver behaviour"
+	when
+		m: Message( typeOfDriver == "ok", partBarrierAvoidanceHi/total > eventOfHighImportance, processedBarrierAvoidanceHi == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[3];
+		content[0] = m.getNumHiBarrierAvoidance();
+		content[1] = m.getPartBarrierAvoidanceHi();
+		content[2] = df.format((m.getPartAbruptTurningHi() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
+		m.setProcessedBarrierAvoidanceHi("Yes");
+		update(m);
+end 
+
+rule "Rule 54 Set text for BarrierAvoidanceMid for ok driver behaviour"
+	when
+		m: Message( typeOfDriver == "ok", partBarrierAvoidanceMid/total > eventOfHighImportance, processedBarrierAvoidanceMid == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[3];
+		content[0] = m.getNumMidBarrierAvoidance();
+		content[1] = m.getPartBarrierAvoidanceMid();
+		content[2] = df.format((m.getPartBarrierAvoidanceMid() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
+		m.setProcessedBarrierAvoidanceHi("Yes");
+		update(m);
+end 
+
+rule "Rule 55 Set text for SkiddingHi for ok driver behaviour"
+	when
+		m: Message( typeOfDriver == "ok", partSkiddingHi/total > eventOfHighImportance, processedSkiddingHi == "No" )
+	then
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[3];
+		content[0] = m.getNumHiSkidding();
+		content[1] = m.getPartSkiddingHi();
+		content[2] = df.format((m.getPartSkiddingHi() / m.getLimit())*100);
+		System.out.println("Ukupan broj dogadjaja 'Vehicle skidding severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
+		m.setProcessedSkiddingHi("Yes");
+		update(m);
+end 
 
 rule "Rule 43 Set text for AccHi for bad driver behavior"
 	when
@@ -788,52 +1047,7 @@ rule "Rule 58 Additionally conclusion about cornering"
 		update(m);
 end
 
-rule "Rule 76 Set text for SpinningHiAllowed if driver is agresive"
-	when
-		m: Message( partSpinningHiAllowed > 0, processedSpinningHiAllowed == "No")
-	then
-		DecimalFormat df = new DecimalFormat();
-		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[5];
-		content[0] = m.getNumHiSpinningAllowed();
-		content[1] = m.getPartSpinningHiAllowed();
-		content[2] = df.format((m.getPartSpinningHiAllowed() / m.getLimit())*100);
-		System.out.println("Ukupan broj dogadjaja 'Vehicle Spinning Allowed severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovi dogadjaji desili su se u periodu izmedju " + content[3] + " i " + content[4] + ". Ovde treba kao olaksavajucu okolnost uzeti vremenske uslove.");
-		
-		Date dateFrom = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateFrom() + " 00:00:00"); 
-		Date dateTo = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateTo() + " 00:00:00");
-		
-		for(SpinningHi sh : m.getSpinningList()) {
-			Date datetimeTriggered = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(sh.getDatetimeTriggered());
-			if ( dateFrom.before(datetimeTriggered) && dateTo.after(datetimeTriggered) ) {
-				System.out.println("Neko suntavo objasnjenje\t" + sh.getDatetimeTriggered() + "\tmax speed\tduration");
-			}
-		}
-		
-		m.setProcessedSpinningHiAllowed("Yes");
-		update(m);
-end 
 
-rule "Rule 77 Execute spinning rule"
-	when
-		m: Message( partSpinningHiNotAllowed > 0, processedSpinningHiNotAllowed == "No" )
-	then
-		Object [] content = new Object[5];
-		System.out.println("Ovako");
-		
-		Date dateFrom = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateFrom() + " 00:00:00"); 
-		Date dateTo = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateTo() + " 00:00:00");
-		
-		for(SpinningHi sh : m.getSpinningList()) {
-			Date datetimeTriggered = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(sh.getDatetimeTriggered());
-			if ( datetimeTriggered.before(dateFrom) || datetimeTriggered.after(dateTo) ) {
-				System.out.println("Neko suntavo objasnjenje\t" + sh.getDatetimeTriggered() + "\tmax speed\tduration");
-			}
-		}	
-		
-		m.setProcessedSpinningHiNotAllowed("Yes");
-		update(m);	
-end
 
 
 
