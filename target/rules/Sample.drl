@@ -9,7 +9,7 @@ global JEFFWizard wizard;
 
 
 // eliminaciona pravila
-rule "Rule-01: If there is no traveled distance, there will be no report"
+rule "Rule 01 If there is no traveled distance, there will be no report"
 	when
 		m : Message( totalTraveledDistance == 0 )	
 	then
@@ -19,7 +19,7 @@ rule "Rule-01: If there is no traveled distance, there will be no report"
 		drools.halt();
 end
 
-rule "Rule-02: There is no irregular behavior of the driver"
+rule "Rule 02 There is no irregular behavior of the driver"
 		lock-on-active
 	when
 		m : Message( totalTraveledDistance >= totalDistanceMidKm, totalEvents == 0 )
@@ -41,7 +41,7 @@ rule "Rule-02: There is no irregular behavior of the driver"
 		update(m);
 end
 		
-rule "Rule-04: limit of negative score is 0"
+rule "Rule 04 limit of negative score is 0"
 	when
 		m : Message( totalTraveledDistance >= totalDistanceZeroKm, totalTraveledDistance <= totalDistanceMidKm, maxEvent == 0 )
 	then
@@ -51,7 +51,7 @@ rule "Rule-04: limit of negative score is 0"
 		update(m);
 end
 
-rule "Rule-05: set number of events, per travel distance"
+rule "Rule 05 set number of events, per travel distance"
 	when
 		m : Message( totalTraveledDistance > totalDistanceMidKm, maxEvent == 0 )
 	then
@@ -62,7 +62,7 @@ rule "Rule-05: set number of events, per travel distance"
 		update(m);
 end  
 
-rule "Rule-06: set limit of negative points for traveled distance below than average"				
+rule "Rule 06 set limit of negative points for traveled distance below than average"				
 	when
 		m : Message( maxEvent > 0, limit == 0, totalTraveledDistance > totalDistanceMidKm, totalTraveledDistance <= totalDistanceAverageKm, maxEvent: maxEvent )
 	then	
@@ -72,7 +72,7 @@ rule "Rule-06: set limit of negative points for traveled distance below than ave
 		update(m);		
 end
 
-rule "Rule-06: set limit of negative points for traveled distance below than high"			
+rule "Rule 07 set limit of negative points for traveled distance below than high"			
 	when
 		m : Message( maxEvent > 0, limit == 0, totalTraveledDistance > totalDistanceAverageKm, totalTraveledDistance <= totalDistanceHiKm, maxEvent: maxEvent )
 	then	
@@ -82,7 +82,7 @@ rule "Rule-06: set limit of negative points for traveled distance below than hig
 		update(m);				
 end
 
-rule "Rule-06: set limit of negative points for traveled distance over than high"			
+rule "Rule 08 set limit of negative points for traveled distance over than high"			
 	when
 		m : Message( maxEvent > 0, limit == 0, totalTraveledDistance > totalDistanceHiKm, maxEvent: maxEvent )
 	then	
@@ -92,7 +92,7 @@ rule "Rule-06: set limit of negative points for traveled distance over than high
 		update(m);				
 end
 
-rule "Rule-07: set acceleration points for severity level medium if numMidAcc is less than allowed"
+rule "Rule 09 set acceleration points for severity level medium if numMidAcc is less than allowed"
 	when
 		m : Message( (float)(numMidAcc/totalTraveledDistance) <= (float)(eventPerKmAccMid/kmBase), partAccMid == Integer.MIN_VALUE ) 
 	then
@@ -101,7 +101,7 @@ rule "Rule-07: set acceleration points for severity level medium if numMidAcc is
 		System.out.println( "no acc point for severity level midium: " + m.getPartAccMid() );
 end
 
-rule "Rule-08: set acceleration points for severity level medium if numMidAcc is greater than allowed"
+rule "Rule 10 set acceleration points for severity level medium if numMidAcc is greater than allowed"
 	when
 		m : Message( (float)(numMidAcc/totalTraveledDistance) > (float)(eventPerKmAccMid/kmBase), partAccMid == Integer.MIN_VALUE, numMidAcc: numMidAcc, eventPerKmAccMid: eventPerKmAccMid ) 
 	then		
@@ -113,7 +113,7 @@ rule "Rule-08: set acceleration points for severity level medium if numMidAcc is
 		System.out.println( "Acc point for severity level midium: " + m.getPartAccMid() );		
 end
 
-rule "Rule-09: set acceleration points for severity level high if numHiAcc is less than allowed"
+rule "Rule 11 set acceleration points for severity level high if numHiAcc is less than allowed"
 	when
 		m : Message( (float)(numHiAcc/totalTraveledDistance) <= (float)(eventPerKmAccHi/kmBase), partAccHi == Integer.MIN_VALUE ) 
 	then
@@ -122,7 +122,7 @@ rule "Rule-09: set acceleration points for severity level high if numHiAcc is le
 		System.out.println( "no acc point for severity level midium: " + m.getPartAccHi() );
 end
 
-rule "Rule-10: set acceleration points for severity level high if numHiAcc is greater than allowed"
+rule "Rule 12 set acceleration points for severity level high if numHiAcc is greater than allowed"
 	when
 		m : Message( (float)(numHiAcc/totalTraveledDistance) > (float)(eventPerKmAccHi/kmBase), partAccHi == Integer.MIN_VALUE, numHiAcc: numHiAcc, eventPerKmAccHi: eventPerKmAccHi ) 
 	then		
@@ -134,7 +134,7 @@ rule "Rule-10: set acceleration points for severity level high if numHiAcc is gr
 		System.out.println( "Acc point for severity level high: " + m.getPartAccHi() );		
 end
 
-rule "Rule-11: set deceleration points for severity level medium if numMidDec is less than allowed"
+rule "Rule 13 set deceleration points for severity level medium if numMidDec is less than allowed"
 	when
 		m : Message( (float)(numMidDec/totalTraveledDistance) <= (float)(eventPerKmDecMid/kmBase), partDecMid == Integer.MIN_VALUE ) 
 	then
@@ -143,7 +143,7 @@ rule "Rule-11: set deceleration points for severity level medium if numMidDec is
 		System.out.println( "no dec point for severity level midium: " + m.getPartDecMid() );
 end
 
-rule "Rule-12: set deceleration points for severity level medium if numMidDec is greater than allowed"
+rule "Rule 14 set deceleration points for severity level medium if numMidDec is greater than allowed"
 	when
 		m : Message( (float)(numMidDec/totalTraveledDistance) > (float)(eventPerKmDecMid/kmBase), partDecMid == Integer.MIN_VALUE, numMidDec: numMidDec, eventPerKmDecMid: eventPerKmDecMid  ) 
 	then		
@@ -155,7 +155,7 @@ rule "Rule-12: set deceleration points for severity level medium if numMidDec is
 		System.out.println( "Dec point for severity level midium: " + m.getPartDecMid() );		
 end
 
-rule "Rule-13: set deceleration points for severity level high if numHiDec is less than allowed"
+rule "Rule 15 set deceleration points for severity level high if numHiDec is less than allowed"
 	when
 		m : Message( (float)(numHiDec/totalTraveledDistance) <= (float)(eventPerKmDecHi/kmBase), partDecHi == Integer.MIN_VALUE ) 
 	then
@@ -164,7 +164,7 @@ rule "Rule-13: set deceleration points for severity level high if numHiDec is le
 		System.out.println( "no dec point for severity level hi: " + m.getPartDecHi() );
 end
 
-rule "Rule-14: set deceleration points for severity level hi if numHiDec is greater than allowed"
+rule "Rule 16 set deceleration points for severity level hi if numHiDec is greater than allowed"
 	when
 		m : Message( (float)(numHiDec/totalTraveledDistance) > (float)(eventPerKmDecHi/kmBase), partDecHi == Integer.MIN_VALUE, numHiDec: numHiDec, eventPerKmDecHi: eventPerKmDecHi ) 
 	then		
@@ -176,7 +176,7 @@ rule "Rule-14: set deceleration points for severity level hi if numHiDec is grea
 		System.out.println( "Dec point for severity level midium: " + m.getPartDecHi() );		
 end
 
-rule "Rule-15: set harsh cornering points for severity level mid if numHiDec is less than allowed"
+rule "Rule 17 set harsh cornering points for severity level mid if numHiDec is less than allowed"
 	when
 		m : Message( (float)(numMidCornering/totalTraveledDistance) <= (float)(eventPerKmCorneringMid/kmBase), partCorneringMid == Integer.MIN_VALUE ) 
 	then
@@ -185,7 +185,7 @@ rule "Rule-15: set harsh cornering points for severity level mid if numHiDec is 
 		System.out.println( "no harsh cornering point for severity level mid: " + m.getPartCorneringMid() );
 end
 
-rule "Rule-16: set harsh cornering points for severity level mid if numMidCornering is greater than allowed"
+rule "Rule 18 set harsh cornering points for severity level mid if numMidCornering is greater than allowed"
 	when
 		m : Message( (float)(numMidCornering/totalTraveledDistance) > (float)(eventPerKmCorneringMid/kmBase), partCorneringMid == Integer.MIN_VALUE, numMidCornering: numMidCornering, eventPerKmCorneringMid: eventPerKmCorneringMid ) 
 	then		
@@ -197,7 +197,7 @@ rule "Rule-16: set harsh cornering points for severity level mid if numMidCorner
 		System.out.println( "Harsh cornering point for severity level midium: " + m.getPartCorneringMid() );		
 end
 
-rule "Rule-17: set harsh cornering points for severity level hi if numHiDec is less than allowed"
+rule "Rule 19 set harsh cornering points for severity level hi if numHiDec is less than allowed"
 	when
 		m : Message( (float)(numHiCornering/totalTraveledDistance) <= (float)(eventPerKmCorneringHi/kmBase), partCorneringHi == Integer.MIN_VALUE ) 
 	then
@@ -206,7 +206,7 @@ rule "Rule-17: set harsh cornering points for severity level hi if numHiDec is l
 		System.out.println( "no harsh cornering point for severity level hi: " + m.getPartCorneringMid() );
 end
 
-rule "Rule-18: set harsh cornering points for severity level hi if numMidCornering is greater than allowed"
+rule "Rule 20 set harsh cornering points for severity level hi if numHiDec is greater than allowed"
 	when
 		m : Message( (float)(numHiCornering/totalTraveledDistance) > (float)(eventPerKmCorneringHi/kmBase), partCorneringHi == Integer.MIN_VALUE, numHiCornering: numHiCornering, eventPerKmCorneringHi: eventPerKmCorneringHi ) 
 	then		
@@ -218,7 +218,7 @@ rule "Rule-18: set harsh cornering points for severity level hi if numMidCorneri
 		System.out.println( "Harsh cornering point for severity level hi: " + m.getPartCorneringHi() );		
 end
 
-rule "Rule-19: set vehicle skidding points if numHiSkidding is less than allowed"
+rule "Rule 21 set vehicle skidding points if numHiSkidding is less than allowed"
 	when
 		m : Message( (float)(numHiSkidding/totalTraveledDistance) <= (float)(eventPerKmSkiddingHi/kmBase), partSkiddingHi == Integer.MIN_VALUE ) 
 	then
@@ -227,7 +227,7 @@ rule "Rule-19: set vehicle skidding points if numHiSkidding is less than allowed
 		System.out.println( "no vehicle skidding: " + m.getPartSkiddingHi() );
 end
 
-rule "Rule-20: set vehicle skidding points if numHiSkidding is greater than allowed"
+rule "Rule 22 set vehicle skidding points if numHiSkidding is greater than allowed"
 	when
 		m : Message( (float)(numHiSkidding/totalTraveledDistance) > (float)(eventPerKmSkiddingHi/kmBase), partSkiddingHi == Integer.MIN_VALUE, numHiSkidding: numHiSkidding, eventPerKmSkiddingHi: eventPerKmSkiddingHi ) 
 	then		
@@ -239,7 +239,7 @@ rule "Rule-20: set vehicle skidding points if numHiSkidding is greater than allo
 		System.out.println( "Vehicle skidding: " + m.getPartSkiddingHi() );		
 end
 
-rule "Rule-21: set abrupt turning points if numHiAbruptTurning is less than allowed"
+rule "Rule 23 set abrupt turning points if numHiAbruptTurning is less than allowed"
 	when
 		m : Message( (float)(numHiAbruptTurning/totalTraveledDistance) <= (float)(eventPerKmAbruptTurningHi/kmBase), partAbruptTurningHi == Integer.MIN_VALUE ) 
 	then
@@ -248,7 +248,7 @@ rule "Rule-21: set abrupt turning points if numHiAbruptTurning is less than allo
 		System.out.println( "No abrupt turning: " + m.getPartAbruptTurningHi() );
 end
 
-rule "Rule-22: set abrupt turning points if numHiAbruptTurning is greater than allowed"
+rule "Rule 24 set abrupt turning points if numHiAbruptTurning is greater than allowed"
 	when
 		m : Message( (float)(numHiAbruptTurning/totalTraveledDistance) > (float)(eventPerKmSkiddingHi/kmBase), partAbruptTurningHi == Integer.MIN_VALUE, numHiAbruptTurning: numHiAbruptTurning, eventPerKmAbruptTurningHi: eventPerKmAbruptTurningHi ) 
 	then		
@@ -260,7 +260,7 @@ rule "Rule-22: set abrupt turning points if numHiAbruptTurning is greater than a
 		System.out.println( "Abrupt turning: " + m.getPartAbruptTurningHi() );		
 end
 
-rule "Rule-23: set aggressive lane change points if numMidAggressiveLaneChange is less than allowed"
+rule "Rule 25 set aggressive lane change points if numMidAggressiveLaneChange is less than allowed"
 	when
 		m : Message( (float)(numMidAggressiveLaneChange/totalTraveledDistance) <= (float)(eventPerKmAggressiveLaneChangeMid/kmBase), partAggressiveLaneChangeMid == Integer.MIN_VALUE ) 
 	then
@@ -269,7 +269,7 @@ rule "Rule-23: set aggressive lane change points if numMidAggressiveLaneChange i
 		System.out.println( "no aggressive lane change severity 1: " + m.getPartAggressiveLaneChangeMid() );
 end
 
-rule "Rule-24: set aggressive lane change points if numMidAggressiveLaneChange is greater than allowed"
+rule "Rule 26 set aggressive lane change points if numMidAggressiveLaneChange is greater than allowed"
 	when
 		m : Message( (float)(numMidAggressiveLaneChange/totalTraveledDistance) > (float)(eventPerKmAggressiveLaneChangeMid/kmBase), partAggressiveLaneChangeMid == Integer.MIN_VALUE, numMidAggressiveLaneChange: numMidAggressiveLaneChange, eventPerKmAggressiveLaneChangeMid: eventPerKmAggressiveLaneChangeMid ) 
 	then		
@@ -281,7 +281,7 @@ rule "Rule-24: set aggressive lane change points if numMidAggressiveLaneChange i
 		System.out.println( "Aggressive lane change for severity 1: " + m.getPartAggressiveLaneChangeMid() );		
 end
 
-rule "Rule-25: set aggressive lane change points if numHiAggressiveLaneChange is less than allowed"
+rule "Rule 27 set aggressive lane change points if numHiAggressiveLaneChange is less than allowed"
 	when
 		m : Message( (float)(numHiAggressiveLaneChange/totalTraveledDistance) <= (float)(eventPerKmAggressiveLaneChangeHi/kmBase), partAggressiveLaneChangeHi == Integer.MIN_VALUE ) 
 	then
@@ -290,7 +290,7 @@ rule "Rule-25: set aggressive lane change points if numHiAggressiveLaneChange is
 		System.out.println( "no aggressive lane change severity 2: " + m.getPartAggressiveLaneChangeHi() );
 end
 
-rule "Rule-26: set aggressive lane change points if numHiAggressiveLaneChange is greater than allowed"
+rule "Rule 28 set aggressive lane change points if numHiAggressiveLaneChange is greater than allowed"
 	when
 		m : Message( (float)(numHiAggressiveLaneChange/totalTraveledDistance) > (float)(eventPerKmAggressiveLaneChangeHi/kmBase), partAggressiveLaneChangeHi == Integer.MIN_VALUE, numHiAggressiveLaneChange: numHiAggressiveLaneChange, eventPerKmAggressiveLaneChangeHi: eventPerKmAggressiveLaneChangeHi ) 
 	then		
@@ -302,7 +302,7 @@ rule "Rule-26: set aggressive lane change points if numHiAggressiveLaneChange is
 		System.out.println( "Aggressive lane change for severity 2: " + m.getPartAggressiveLaneChangeHi() );		
 end
 
-rule "Rule-27: set barrier avoidance points if numMidBarrierAvoidance is less than allowed"
+rule "Rule 29 set barrier avoidance points if numMidBarrierAvoidance is less than allowed"
 	when
 		m : Message( (float)(numMidBarrierAvoidance/totalTraveledDistance) <= (float)(eventPerKmBarrierAvoidanceMid/kmBase), partBarrierAvoidanceMid == Integer.MIN_VALUE ) 
 	then
@@ -311,7 +311,7 @@ rule "Rule-27: set barrier avoidance points if numMidBarrierAvoidance is less th
 		System.out.println( "no barrier avoidance severity 1: " + m.getPartBarrierAvoidanceMid() );
 end
 
-rule "Rule-28: set barrier avoidance points if numMidBarrierAvoidance is greater than allowed"
+rule "Rule 30 set barrier avoidance points if numMidBarrierAvoidance is greater than allowed"
 	when
 		m : Message( (float)(numMidBarrierAvoidance/totalTraveledDistance) > (float)(eventPerKmBarrierAvoidanceMid/kmBase), partBarrierAvoidanceMid  == Integer.MIN_VALUE, numMidBarrierAvoidance: numMidBarrierAvoidance, eventPerKmBarrierAvoidanceMid: eventPerKmBarrierAvoidanceMid ) 
 	then		
@@ -323,7 +323,7 @@ rule "Rule-28: set barrier avoidance points if numMidBarrierAvoidance is greater
 		System.out.println( "Barrier avoidance for severity 1: " + m.getPartBarrierAvoidanceMid() );		
 end
 
-rule "Rule-29: set barrier avoidance points if numHiBarrierAvoidance is less than allowed"
+rule "Rule 31 set barrier avoidance points if numHiBarrierAvoidance is less than allowed"
 	when
 		m : Message( (float)(numHiBarrierAvoidance/totalTraveledDistance) <= (float)(eventPerKmBarrierAvoidanceHi/kmBase), partBarrierAvoidanceHi  == Integer.MIN_VALUE ) 
 	then
@@ -332,7 +332,7 @@ rule "Rule-29: set barrier avoidance points if numHiBarrierAvoidance is less tha
 		System.out.println( "no barrier avoidance severity 2: " + m.getPartBarrierAvoidanceHi() );
 end
 
-rule "Rule-30: set barrier avoidance points if numHiBarrierAvoidance is greater than allowed"
+rule "Rule 32 set barrier avoidance points if numHiBarrierAvoidance is greater than allowed"
 	when
 		m : Message( (float)(numHiBarrierAvoidance/totalTraveledDistance) > (float)(eventPerKmBarrierAvoidanceHi/kmBase), partBarrierAvoidanceHi == Integer.MIN_VALUE, numHiBarrierAvoidance: numHiBarrierAvoidance, eventPerKmBarrierAvoidanceHi: eventPerKmBarrierAvoidanceHi ) 
 	then		
@@ -344,7 +344,7 @@ rule "Rule-30: set barrier avoidance points if numHiBarrierAvoidance is greater 
 		System.out.println( "Barrier avoidance for severity 2: " + m.getPartBarrierAvoidanceHi() );		
 end
 
-rule "Rule 31 check if spinning is allowed"
+rule "Rule 33 check if spinning is allowed"
 	when
 		m: Message( numHiSpinning > 0, numHiSpinningAllowed == Integer.MIN_VALUE)
 		exists SpinningHi(datetimeTriggered > m.getDateFrom(), datetimeTriggered < m.getDateTo()) from m.getSpinningList()
@@ -366,7 +366,7 @@ rule "Rule 31 check if spinning is allowed"
 		update(m);
 end
 
-rule "Rule 32 check if spinning is not allowed"
+rule "Rule 33 check if spinning is not allowed"
 	when
 		m: Message( numHiSpinning > 0, numHiSpinningNotAllowed == Integer.MIN_VALUE)
 		exists SpinningHi(datetimeTriggered < m.getDateFrom() || datetimeTriggered > m.getDateTo()) from m.getSpinningList()
@@ -388,7 +388,18 @@ rule "Rule 32 check if spinning is not allowed"
 		update(m);
 end
 
-rule "Rule 33 set points for spinning if spin is allowed"
+rule "Rule 34 set points for allowed spinning if is less than allowed"
+	when
+		m: Message( (float)(numHiSpinningAllowed/totalTraveledDistance) <= (float)(eventPerKmSpinningHiInWinter/kmBase), partSpinningHiAllowed == Integer.MIN_VALUE, numHiSpinningAllowed: numHiSpinningAllowed, eventPerKmSpinningHiInWinter: eventPerKmSpinningHiInWinter )
+	then
+		int points = 0;		
+		System.out.println("negativni poeni za spinove koji su dozvoljeni a manji su od granicnih: " + points);			
+		m.setPartSpinningHiAllowed(points);
+		m.setTotal(m.getTotal() + points);
+		update(m);	
+end
+
+rule "Rule 36 set points for allowed spinning if is greater than allowed"
 	when
 		m: Message( (float)(numHiSpinningAllowed/totalTraveledDistance) > (float)(eventPerKmSpinningHiInWinter/kmBase), partSpinningHiAllowed == Integer.MIN_VALUE, numHiSpinningAllowed: numHiSpinningAllowed, eventPerKmSpinningHiInWinter: eventPerKmSpinningHiInWinter )
 	then
@@ -402,18 +413,27 @@ rule "Rule 33 set points for spinning if spin is allowed"
 		update(m);	
 end
 
-rule "Rule 34 not allowed spinning"
+rule "Rule 37 set points for spinning if is less than allowed"
+	when
+		m: Message( (float)(numHiSpinningNotAllowed/totalTraveledDistance) <= (float)(eventPerKmSpinningHi/kmBase), partSpinningHiNotAllowed == Integer.MIN_VALUE, numEvent: numHiSpinningNotAllowed )
+	then
+		System.out.println("Nema spina " + 0);
+		m.setPartSpinningHiNotAllowed(0);
+		update(m);
+end
+
+rule "Rule 38 set points for spinning if is greater than allowed"
 	when
 		m: Message( (float)(numHiSpinningNotAllowed/totalTraveledDistance) > (float)(eventPerKmSpinningHi/kmBase), partSpinningHiNotAllowed == Integer.MIN_VALUE, numEvent: numHiSpinningNotAllowed )
 	then
-		System.out.println("okretanje nije dozvoljeno " + numEvent);
-		m.setPartSpinningHiNotAllowed(numEvent);
-		m.setTotal(m.getTotal() + m.getLimit() + numEvent);
+		System.out.println("Ukupno spinova " + numEvent);
+		m.setPartSpinningHiNotAllowed(m.getLimit() + numEvent);
+		m.setTotal(m.getTotal() + m.getPartSpinningHiNotAllowed());
 		m.setTypeOfDriver("extreme");
 		update(m);
 end
 
-rule "Rule 35 set speed limit points if numSpeedLimit is less than allowed"
+rule "Rule 39 set speed limit points if numSpeedLimit is less than allowed"
 	when
 		m : Message( (float)(numSpeedLimit/totalTraveledDistance) <= (float)(eventPerKmSpeedLimit/kmBase), partSpeedLimit  == Integer.MIN_VALUE ) 
 	then
@@ -422,7 +442,7 @@ rule "Rule 35 set speed limit points if numSpeedLimit is less than allowed"
 		System.out.println( "Ovo je speed limit: " + m.getPartBarrierAvoidanceHi() );
 end
 
-rule "Rule 35 set negative points for speed limit"
+rule "Rule 40 set negative points for speed limit"
 	when
 		m: Message((float)(numSpeedLimit/totalTraveledDistance) > (float)(eventPerKmSpeedLimit/kmBase), partSpeedLimit == Integer.MIN_VALUE) 
 	then
@@ -437,7 +457,7 @@ rule "Rule 35 set negative points for speed limit"
 			i++;
 		}
 		
-		System.out.println("ovo je speed limit " + points);
+		System.out.println("Negativni bodovi za speed limit " + points);
 		
 		m.setPartSpeedLimit(points);
 		m.setTotal(m.getTotal() + points);
@@ -446,23 +466,23 @@ end
 	
 
 
-rule "Rule 36 Set ok status for driver"
+rule "Rule 45 Set ok status for driver"
 	when 
 		m: Message( typeOfDriver == "none", total < limit, ((total/ limit) *100) <= 20, total: total, limit: limit, result: ((total/limit) *100) )
 	then
-		System.out.println( "Set ok status for driver "+ total + " " + limit);
 		Object [] content = new Object[4];
 		content[0] = m.getTotalTraveledDistance();
 		content[1] = limit;
 		content[2] = total; 
 		content[3] = result; 
 		
+		System.out.println( "Set ok status for driver "+ total + " " + limit);
+		wizard.addTextVeryPositive("Rule 45 Set ok status for driver", content);		
 		m.setTypeOfDriver("ok");
-		//wizard.addText(null, "Set ok status for driver", null, content);
 		update(m);
 end
 
-rule "Rule 37 Set border status for driver"
+rule "Rule 46 Set border status for driver"
 	when
 		m: Message( typeOfDriver == "none", total < limit, ((total/ limit) *100) > 20, ((total/ limit) *100) <= 40, total: total, limit: limit, result: ((total/limit) *100) )
 	then
@@ -474,7 +494,7 @@ rule "Rule 37 Set border status for driver"
 		content[3] = result; 
 		
 		m.setTypeOfDriver("border");
-		//wizard.addText(null, "Set border status for driver", null, content);
+		wizard.addText("Rule 46 Set border status for driver", content);
 		update(m);
 end
 
