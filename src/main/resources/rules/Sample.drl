@@ -493,8 +493,8 @@ rule "Rule 46 Set border status for driver"
 		content[2] = total; 
 		content[3] = result; 
 		
-		m.setTypeOfDriver("border");
 		wizard.addText("Rule 46 Set border status for driver", content);
+		m.setTypeOfDriver("border");
 		update(m);
 end
 
@@ -509,12 +509,12 @@ rule "Rule 47 Set risk status for driver"
 		content[2] = total; 
 		content[3] = result; 
 		
-		m.setTypeOfDriver("ok");
-		//wizard.addTextStrategic("Set risk status for driver", content);
+		wizard.addTextWarning("Rule 47 Set risk status for driver", content);
+		m.setTypeOfDriver("risk");
 		update(m);
 end
 
-rule "Rule 39 Set agresive status for driver"
+rule "Rule 48 Set agresive status for driver"
 	when
 		m: Message(typeOfDriver == "none", ((total/ limit) *100) > 70, ((total/ limit) *100) <= 100, total: total, limit: limit, result: ((total/ limit) *100) )
 	then
@@ -525,23 +525,25 @@ rule "Rule 39 Set agresive status for driver"
 		content[2] = total; 
 		content[3] = result; 
 				
-		
-		m.setTypeOfDriver("agresive");
+		wizard.addTextNegative("Rule 48 Set agresive status for driver", content);
 		//wizard.addText(null, "Set border status for driver", null, content);
+		m.setTypeOfDriver("agresive");
 		update(m);
 end
 	
-rule "Rule 40 Set extreme status for driver"
+rule "Rule 49 Set extreme status for driver"
 	when
 		m: Message( typeOfDriver == "none", total > limit, total: total, limit: limit, result: ((limit - total/ limit) *100) )
 	then
 		System.out.println( "Set extreme status for driver " + total + " " + limit);
 		
-		//Object [] content = new Object[4];
-		//content[0] = m.getTotalTraveledDistance();
-		//content[1] = limit;
-		//content[2] = total; 
-		//content[3] = result;
+		Object [] content = new Object[4];
+		content[0] = m.getTotalTraveledDistance();
+		content[1] = limit;
+		content[2] = total; 
+		content[3] = result;
+		
+		wizard.addTextVeryNegative("Rule 49 Set extreme status for driver", content);
 		m.setTypeOfDriver("extreme");
 		update(m);
 end
