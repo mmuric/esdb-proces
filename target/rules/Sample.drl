@@ -493,12 +493,12 @@ rule "Rule 46 Set border status for driver"
 		content[2] = total; 
 		content[3] = result; 
 		
-		m.setTypeOfDriver("border");
 		wizard.addText("Rule 46 Set border status for driver", content);
+		m.setTypeOfDriver("border");
 		update(m);
 end
 
-rule "Rule 38 Set risk status for driver"
+rule "Rule 47 Set risk status for driver"
 	when
 		m: Message( typeOfDriver == "none", total < limit, ((total/ limit) *100) > 40, ((total/ limit) *100) <= 70, total: total, limit: limit, result: ((total/limit) *100) )
 	then
@@ -509,12 +509,12 @@ rule "Rule 38 Set risk status for driver"
 		content[2] = total; 
 		content[3] = result; 
 		
-		m.setTypeOfDriver("ok");
-		//wizard.addTextStrategic("Set risk status for driver", content);
+		wizard.addTextWarning("Rule 47 Set risk status for driver", content);
+		m.setTypeOfDriver("risk");
 		update(m);
 end
 
-rule "Rule 39 Set agresive status for driver"
+rule "Rule 48 Set agresive status for driver"
 	when
 		m: Message(typeOfDriver == "none", ((total/ limit) *100) > 70, ((total/ limit) *100) <= 100, total: total, limit: limit, result: ((total/ limit) *100) )
 	then
@@ -525,47 +525,57 @@ rule "Rule 39 Set agresive status for driver"
 		content[2] = total; 
 		content[3] = result; 
 				
-		
-		m.setTypeOfDriver("agresive");
+		wizard.addTextNegative("Rule 48 Set agresive status for driver", content);
 		//wizard.addText(null, "Set border status for driver", null, content);
+		m.setTypeOfDriver("agresive");
 		update(m);
 end
 	
-rule "Rule 40 Set extreme status for driver"
+rule "Rule 49 Set extreme status for driver"
 	when
 		m: Message( typeOfDriver == "none", total > limit, total: total, limit: limit, result: ((limit - total/ limit) *100) )
 	then
 		System.out.println( "Set extreme status for driver " + total + " " + limit);
 		
-		//Object [] content = new Object[4];
-		//content[0] = m.getTotalTraveledDistance();
-		//content[1] = limit;
-		//content[2] = total; 
-		//content[3] = result;
+		Object [] content = new Object[4];
+		content[0] = m.getTotalTraveledDistance();
+		content[1] = limit;
+		content[2] = total; 
+		content[3] = result;
+		
+		wizard.addTextVeryNegative("Rule 49 Set extreme status for driver", content);
 		m.setTypeOfDriver("extreme");
 		update(m);
 end
 
-rule "Rule 41 Postavi eventOfLowerImportance"
+
+
+rule "Rule 50 Postavi eventOfLowerImportance"
 	when
-		m: Message( total > 0, eventOfLowerImportance == Integer.MIN_VALUE, limit: limit )
+		m: Message( typeOfDriver in ("ok", "border", "risk", "agresive"), eventOfLowerImportance == Integer.MIN_VALUE, limit: limit )
 	then
-		float lowImportance = (m.getPartAccHi()/limit + m.getPartAccMid()/limit + m.getPartDecHi()/limit + m.getPartDecMid()/limit + m.getPartCorneringHi()/limit + m.getPartCorneringMid()/limit + m.getPartSpeedLimit()/limit) / 7;
+		float totalLowImportance = m.getPartAccHi() + m.getPartAccMid() + m.getPartDecHi() + m.getPartDecMid() + m.getPartCorneringHi() + m.getPartCorneringMid() + m.getPartSpeedLimit();
+		float lowImportance = (totalLowImportance) / (7 * limit);
+		Object [] content = new Object[1];
+		content[0] = (int) totalLowImportance;
+		System.out.println("niska znacajnost " + lowImportance + " ukupno " + totalLowImportance);
 		
-		System.out.println(lowImportance);
-		
+		wizard.addText("Rule 50 Postavi eventOfLowerImportance", content);
 		m.setEventOfLowerImportance((float)lowImportance);
 		update(m);
 end
 
-rule "Rule 42 Postavi eventOfHighImportance"
+rule "Rule 51 Postavi eventOfHighImportance"
 	when
-		m: Message( total > 0, eventOfHighImportance == Integer.MIN_VALUE, limit: limit )
+		m: Message( typeOfDriver in ("ok", "border", "risk", "agresive"), eventOfHighImportance == Integer.MIN_VALUE, limit: limit )
 	then
-		float highImportance = (m.getPartAbruptTurningHi()/limit + m.getPartAggressiveLaneChangeHi()/limit + m.getPartAggressiveLaneChangeMid()/limit + m.getPartBarrierAvoidanceHi()/limit + m.getPartBarrierAvoidanceMid()/limit + m.getPartSkiddingHi()/limit) / 6;
-			
-		System.out.println(highImportance);
+		float totalHiImportance = m.getPartAbruptTurningHi() + m.getPartAggressiveLaneChangeHi() + m.getPartAggressiveLaneChangeMid() + m.getPartBarrierAvoidanceHi() + m.getPartBarrierAvoidanceMid() + m.getPartSkiddingHi();
+		float highImportance = totalHiImportance/(limit * 6);
+		Object [] content = new Object[1];
+		content[0] = (int) totalHiImportance;
+		System.out.println("visoka znacajnost " + highImportance + " ukupno " + totalHiImportance);
 		
+		wizard.addText("Rule 51 Postavi eventOfHighImportance", content);
 		m.setEventOfHighImportance(highImportance);
 		update(m);
 end

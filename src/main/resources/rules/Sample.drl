@@ -548,31 +548,37 @@ rule "Rule 49 Set extreme status for driver"
 		update(m);
 end
 
-rule "Rule 41 Postavi eventOfLowerImportance"
+
+
+rule "Rule 50 Postavi eventOfLowerImportance"
 	when
-		m: Message( total > 0, eventOfLowerImportance == Integer.MIN_VALUE, limit: limit )
+		m: Message( typeOfDriver in ("ok", "border", "risk", "agresive"), eventOfLowerImportance == Integer.MIN_VALUE, limit: limit )
 	then
-		float lowImportance = (m.getPartAccHi()/limit + m.getPartAccMid()/limit + m.getPartDecHi()/limit + m.getPartDecMid()/limit + m.getPartCorneringHi()/limit + m.getPartCorneringMid()/limit + m.getPartSpeedLimit()/limit) / 7;
+		float totalLowImportance = m.getPartAccHi() + m.getPartAccMid() + m.getPartDecHi() + m.getPartDecMid() + m.getPartCorneringHi() + m.getPartCorneringMid() + m.getPartSpeedLimit();
+		float lowImportance = (totalLowImportance) / (7 * limit);
+		Object [] content = new Object[1];
+		content[0] = (int) totalLowImportance;
+		System.out.println("niska znacajnost " + lowImportance + " ukupno " + totalLowImportance);
 		
-		System.out.println(lowImportance);
-		
+		wizard.addText("Rule 50 Postavi eventOfLowerImportance", content);
 		m.setEventOfLowerImportance((float)lowImportance);
 		update(m);
 end
 
-rule "Rule 42 Postavi eventOfHighImportance"
+rule "Rule 51 Postavi eventOfHighImportance"
 	when
-		m: Message( total > 0, eventOfHighImportance == Integer.MIN_VALUE, limit: limit )
+		m: Message( typeOfDriver in ("ok", "border", "risk", "agresive"), eventOfHighImportance == Integer.MIN_VALUE, limit: limit )
 	then
-		float highImportance = (m.getPartAbruptTurningHi()/limit + m.getPartAggressiveLaneChangeHi()/limit + m.getPartAggressiveLaneChangeMid()/limit + m.getPartBarrierAvoidanceHi()/limit + m.getPartBarrierAvoidanceMid()/limit + m.getPartSkiddingHi()/limit) / 6;
-			
-		System.out.println(highImportance);
+		float totalHiImportance = m.getPartAbruptTurningHi() + m.getPartAggressiveLaneChangeHi() + m.getPartAggressiveLaneChangeMid() + m.getPartBarrierAvoidanceHi() + m.getPartBarrierAvoidanceMid() + m.getPartSkiddingHi();
+		float highImportance = totalHiImportance/(limit * 6);
+		Object [] content = new Object[1];
+		content[0] = (int) totalHiImportance;
+		System.out.println("visoka znacajnost " + highImportance + " ukupno " + totalHiImportance);
 		
+		wizard.addText("Rule 51 Postavi eventOfHighImportance", content);
 		m.setEventOfHighImportance(highImportance);
 		update(m);
 end
-
-// da li ucestvuje u ukupnoj sumi preko 50%, koji je tip drivera, da li je obradjivan
 
 rule "Rule 76 Set text for SpinningHiAllowed if driver is agresive"
 	when

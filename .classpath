@@ -5,10 +5,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="DROOLS/Drools"/>
 	<classpathentry kind="src" path="resources"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/external-jars"/>
-	<classpathentry kind="lib" path="/home/mmuric/eclipse/plugin_all_other/dom4j-1.6.1.jar"/>
-	<classpathentry kind="lib" path="/home/mmuric/eclipse/plugin_all_other/iText-2.1.7.jar"/>
-	<classpathentry kind="lib" path="/home/mmuric/eclipse/plugin_all_other/JEFFCode.jar"/>
-	<classpathentry kind="lib" path="/home/mmuric/eclipse/plugin_all_other/json-simple-1.1.1.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/external-jars"/>	
 	<classpathentry kind="output" path="target"/>
 </classpath>

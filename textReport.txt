@@ -1,5 +1,11 @@
-Creation date: 6/11/14 3:53 PM
+Creation date: 6/12/14 9:55 PM
 Report owner is: mm
 The language used: srb
 The country is: RS
+
+Vozac pripada grupi agresivnih vozaca. Ovi grupu karakterise izuzetno agresivno ponasanje za volanom. Visok broj prekrsaja niskog i visokog nivoa znacajnosti u odnosu na ukupan limit karakteristicni su za ovu grupu (preko 70% ali ne vise od ukupnog limiita). U cilju sprecavanja agresivnog ponasanja predlazu se blaze kazne, kao i savetovanje u cilju smanjnja prekrsaja. Ukupna predjena kilometraza ovog vozaca je 1,001 km, sto znaci da ukupan limit negativnih bodova iznosi 211. Vozac je napravio ukupno 175 negativnih bodova, i tim je napravio ucesce od 82%. 
+
+Dogadjaji male znacajnosti predstavljaju dogadjaje koji se mogu ponoviti vise puta u odnosu na ukupan predjeni put. U dogadjaje male znacajnosti spadaju: Harsh acceleration severity level Hi, Harsh deceleration severity level Hi, Cornering severity level Hi, Harsh acceleration severity level Mid, Harsh deceleration severity level Mid, Cornering severity level Mid i Speed limit notification. Ukupan broj dogadjaja male znacajnosti koje je vozac napravio iznosi 105.
+
+Dogadaji velike znacajnosti predstavljaju dogadjaje koji se retko ponavljaju vise od jednom u odnosu na ukupan predjeni put. U dogadjaje velike znacajnosti spadaju: Abrupt turning severity level Hi, Aggressive lane change severity level Hi, Barrier avoidance severity level Hi, Aggressive lane change severity level Mid, Barrier avoidance severity level Mid and Vehicle skidding severity level Hi. Ukupan broj dogadjaja velike znacajnosti koje je vozac napravio iznosi 17.
 
