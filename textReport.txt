@@ -1,4 +1,4 @@
-Creation date: 6/12/14 9:55 PM
+Creation date: 6/15/14 9:26 PM
 Report owner is: mm
 The language used: srb
 The country is: RS
@@ -8,4 +8,24 @@ Vozac pripada grupi agresivnih vozaca. Ovi grupu karakterise izuzetno agresivno 
 Dogadjaji male znacajnosti predstavljaju dogadjaje koji se mogu ponoviti vise puta u odnosu na ukupan predjeni put. U dogadjaje male znacajnosti spadaju: Harsh acceleration severity level Hi, Harsh deceleration severity level Hi, Cornering severity level Hi, Harsh acceleration severity level Mid, Harsh deceleration severity level Mid, Cornering severity level Mid i Speed limit notification. Ukupan broj dogadjaja male znacajnosti koje je vozac napravio iznosi 105.
 
 Dogadaji velike znacajnosti predstavljaju dogadjaje koji se retko ponavljaju vise od jednom u odnosu na ukupan predjeni put. U dogadjaje velike znacajnosti spadaju: Abrupt turning severity level Hi, Aggressive lane change severity level Hi, Barrier avoidance severity level Hi, Aggressive lane change severity level Mid, Barrier avoidance severity level Mid and Vehicle skidding severity level Hi. Ukupan broj dogadjaja velike znacajnosti koje je vozac napravio iznosi 17.
+
+Ukupan broj dogadjaja "Vehicle Spinning Allowed severity level Hi" iznosi: 3 sto ukupno iznosi 53 negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa 25.12%. Ovi dogadjaji desili su se u periodu izmedju 5/20/14 12:00 AM i 5/30/14 12:00 AM. Ovde treba kao olaksavajucu okolnost uzeti vremenske uslove, ako je bilo vremenskih nepogoda.
+
+Datum i vreme dogadaja       Brzina vozila       Duzina trajanja dogadjaja
+-------------------
+2014-05-20 15:22:40       54       8502
+2014-05-21 12:22:40       54       8502
+2014-05-24 13:22:40       54       8502
+
+Ukupan broj dogadjaja "Harsh acceleration severity level Hi" iznosi: 20 sto ukupno iznosi 28 negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa 13.27%. Kako bi popravio svoje ponasanje vozac mora smanjiti agresivnost prilikom naglog ubrzanja za 10 dogadjaja.
+
+Ukupan broj dogadjaja "Harsh deceleration severity level Mid" iznosi: 18 sto ukupno iznosi 18 negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa 8.53%.  Kako bi popravio svoje ponasanje vozac mora smanjiti nagla kocenja za 3 dogadjaja.
+
+Ukupan broj dogadjaja "Cornering severity level Mid" iznosi: 37 sto ukupno iznosi 37 negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa 17.54%.  Kako bi popravio svoje ponasanje vozac mora smanjiti nagle ulaske u krivinu za 2 dogadjaja.
+
+Ukupan broj dogadjaja "Abrupt turning severity level Hi" iznosi: 2 sto ukupno iznosi 10 negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa 4.74%. Ovaj dogadjaj se generise ako vozac gubi kontrolu nad vozilom prilikom skretanja. Pojava ovog dogadjaja u ukupnoj sumi negativnih bodova govori nam o tome da vozac ozbiljno ugrozava svoju bezbednost. U cilju poboljsanja ukupnog rezultata vozaca, trebalo bi posavetovati vozaca da smanji ukupan broj ovih dogadjaja za 9.
+
+Ukupan broj dogadjaja "Aggressive lane change severity level Hi" iznosi: 7 sto ukupno iznosi 7 negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa 3.32%. Ovaj dogadjaj se generise ukoliko vozac veoma agresivno zaobilazi vozilo ili grupu vozila. Ucesca ovog dogadjaja u ukupnoj sumi pokazuje nam da je vozac izuzetno agresivan prilikom zaobilazenja drugih ucesnika u saobracaju. Na ovaj nacin vozac ugrozava kako sebe tako i druge ucesnike u saobracaju. U cilju poboljsanja ukupnog rezultata vozaca, trebalo bi posavetovati vozaca da smanji ukupan broj ovih dogadjaja za 2.
+
+Vozac ocigledno voli da rizikuje u krivini. Trebalo bi ga savetovati da malo laganije ulazi u krivinu kako bi smanjio ukupan broj negativnih bodova.
 

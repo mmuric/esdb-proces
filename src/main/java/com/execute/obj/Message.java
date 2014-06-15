@@ -220,9 +220,9 @@ public class Message {
 //    	this.spinningList.add(sh6);
 //    	this.spinningList.add(sh7);
 
-    	SpinningHi sh1 = new SpinningHi("3", "34", "2014-05-20 15:22:40");
-    	SpinningHi sh2 = new SpinningHi("3", "34", "2014-05-21 12:22:40");
-    	SpinningHi sh3 = new SpinningHi("3", "34", "2014-05-24 13:22:40");
+    	SpinningHi sh1 = new SpinningHi("3", "34", "2014-05-20 15:22:40", "54", "8502");
+    	SpinningHi sh2 = new SpinningHi("3", "34", "2014-05-21 12:22:40", "54", "8502");
+    	SpinningHi sh3 = new SpinningHi("3", "34", "2014-05-24 13:22:40", "54", "8502");
     	this.spinningList.add(sh1);
     	this.spinningList.add(sh2);
     	this.spinningList.add(sh3);

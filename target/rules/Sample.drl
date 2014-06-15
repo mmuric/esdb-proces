@@ -4,8 +4,13 @@ import com.execute.obj.event.SpeedLimit;
 import org.goodoldai.jeff.wizard.JEFFWizard;
 import java.util.Date;
 import java.text.DecimalFormat;
+import org.goodoldai.jeff.explanation.data.ThreeDimData;
+import org.goodoldai.jeff.explanation.data.Triple;
+import org.goodoldai.jeff.explanation.data.Dimension;
+import java.util.ArrayList;
 
 global JEFFWizard wizard;
+
 
 
 // eliminaciona pravila
@@ -526,7 +531,6 @@ rule "Rule 48 Set agresive status for driver"
 		content[3] = result; 
 				
 		wizard.addTextNegative("Rule 48 Set agresive status for driver", content);
-		//wizard.addText(null, "Set border status for driver", null, content);
 		m.setTypeOfDriver("agresive");
 		update(m);
 end
@@ -580,56 +584,81 @@ rule "Rule 51 Postavi eventOfHighImportance"
 		update(m);
 end
 
-// da li ucestvuje u ukupnoj sumi preko 50%, koji je tip drivera, da li je obradjivan
-
-rule "Rule 76 Set text for SpinningHiAllowed if driver is agresive"
+rule "Rule 52 Set text for SpinningHiAllowed"
 	when
 		m: Message( partSpinningHiAllowed > 0, processedSpinningHiAllowed == "No")
 	then
+		Date dateFrom = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateFrom() + " 00:00:00"); 
+		Date dateTo = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateTo() + " 00:00:00");
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
 		Object [] content = new Object[5];
 		content[0] = m.getNumHiSpinningAllowed();
 		content[1] = m.getPartSpinningHiAllowed();
 		content[2] = df.format((m.getPartSpinningHiAllowed() / m.getLimit())*100);
+		content[3] = dateFrom;
+		content[4] = dateTo;
+		
 		System.out.println("Ukupan broj dogadjaja 'Vehicle Spinning Allowed severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovi dogadjaji desili su se u periodu izmedju " + content[3] + " i " + content[4] + ". Ovde treba kao olaksavajucu okolnost uzeti vremenske uslove.");
 		
-		Date dateFrom = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateFrom() + " 00:00:00"); 
-		Date dateTo = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateTo() + " 00:00:00");
+		wizard.addTextWarning("Rule 52 Set text for SpinningHiAllowed", content);
+		
+		ArrayList<Triple> values = new ArrayList<Triple>();		
 		
 		for(SpinningHi sh : m.getSpinningList()) {
 			Date datetimeTriggered = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(sh.getDatetimeTriggered());
 			if ( dateFrom.before(datetimeTriggered) && dateTo.after(datetimeTriggered) ) {
-				System.out.println("Neko suntavo objasnjenje\t" + sh.getDatetimeTriggered() + "\tmax speed\tduration");
+				values.add(new Triple(sh.getDatetimeTriggered(), sh.getSpeed(), sh.getDuration()));
 			}
 		}
+		
+		wizard.addData("Rule 52 Set text for SpinningHiAllowed", new ThreeDimData(
+			new Dimension("Datum i vreme dogadaja"),
+			new Dimension("Brzina vozila"),
+			new Dimension("Duzina trajanja dogadjaja", "s"),
+			values
+		));
 		
 		m.setProcessedSpinningHiAllowed("Yes");
 		update(m);
 end 
 
-rule "Rule 77 Execute spinning rule"
+rule "Rule 53 Set text for SpinningHiNotAllowed"
 	when
 		m: Message( partSpinningHiNotAllowed > 0, processedSpinningHiNotAllowed == "No" )
 	then
-		Object [] content = new Object[5];
-		System.out.println("Ovako");
-		
 		Date dateFrom = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateFrom() + " 00:00:00"); 
 		Date dateTo = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(m.getDateTo() + " 00:00:00");
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(2);
+		Object [] content = new Object[3];
+		content[0] = m.getNumHiSpinningNotAllowed();
+		content[1] = m.getPartSpinningHiNotAllowed();
+		content[2] = df.format((m.getPartSpinningHiNotAllowed() / m.getLimit())*100);
+		
+		wizard.addTextVeryNegative("Rule 53 Set text for SpinningHiNotAllowed", content);
+		
+		ArrayList<Triple> values = new ArrayList<Triple>();		
 		
 		for(SpinningHi sh : m.getSpinningList()) {
 			Date datetimeTriggered = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(sh.getDatetimeTriggered());
 			if ( datetimeTriggered.before(dateFrom) || datetimeTriggered.after(dateTo) ) {
-				System.out.println("Neko suntavo objasnjenje\t" + sh.getDatetimeTriggered() + "\tmax speed\tduration");
+				values.add(new Triple(sh.getDatetimeTriggered(), sh.getSpeed(), sh.getDuration()));
 			}
 		}	
+		
+		wizard.addDataNegative("Rule 52 Set text for SpinningHiAllowed", new ThreeDimData(
+			new Dimension("Datum i vreme dogadaja"),
+			new Dimension("Brzina vozila"),
+			new Dimension("Duzina trajanja dogadjaja", "s"),
+			values
+		));
 		
 		m.setProcessedSpinningHiNotAllowed("Yes");
 		update(m);	
 end
 
-rule "Rule 43 Set text for AccHi for ok driver behavior"
+rule "Rule 54 Set text for AccHi for ok driver behavior"
 	when
 		m: Message( typeOfDriver == "ok" , partAccHi/total > eventOfLowerImportance, processedAccHi == "No" )
 	then
@@ -640,11 +669,13 @@ rule "Rule 43 Set text for AccHi for ok driver behavior"
 		content[1] = m.getPartAccHi();
 		content[2] = df.format((m.getPartAccHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Harsh acceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		
+		wizard.addTextPositive("Rule 54 Set text for AccHi for ok driver behavior", content);
 		m.setProcessedAccHi("Yes");
 		update(m);
 end 
 
-rule "Rule 44 Set text for AccMid for ok driver behavior"
+rule "Rule 55 Set text for AccMid for ok driver behavior"
 	when
 		m: Message( typeOfDriver == "ok" , partAccMid/total > eventOfLowerImportance, processedAccMid == "No" )
 	then
@@ -655,11 +686,13 @@ rule "Rule 44 Set text for AccMid for ok driver behavior"
 		content[1] = m.getPartAccMid();
 		content[2] = df.format((m.getPartAccMid() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Harsh acceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		
+		wizard.addTextPositive("Rule 55 Set text for AccMid for ok driver behavior", content);
 		m.setProcessedAccMid("Yes");
 		update(m);
 end 
 
-rule "Rule 45 Set text for DecHi for ok driver behavior"
+rule "Rule 56 Set text for DecHi for ok driver behavior"
 	when
 		m: Message( typeOfDriver == "ok" , partDecHi/total > eventOfLowerImportance, processedDecHi == "No" )
 	then
@@ -670,11 +703,13 @@ rule "Rule 45 Set text for DecHi for ok driver behavior"
 		content[1] = m.getPartDecHi();
 		content[2] = df.format((m.getPartDecHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Harsh deceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		
+		wizard.addTextPositive("Rule 56 Set text for DecHi for ok driver behavior", content);
 		m.setProcessedDecHi("Yes");
 		update(m);
 end
 
-rule "Rule 46 Set text for DecMid for ok driver behavior"
+rule "Rule 57 Set text for DecMid for ok driver behavior"
 	when
 		m: Message( typeOfDriver == "ok" , partDecMid/total > eventOfLowerImportance, processedDecMid == "No" )
 	then
@@ -685,11 +720,13 @@ rule "Rule 46 Set text for DecMid for ok driver behavior"
 		content[1] = m.getPartDecMid();
 		content[2] = df.format((m.getPartDecMid() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Harsh deceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		
+		wizard.addTextPositive("Rule 57 Set text for DecMid for ok driver behavior", content);
 		m.setProcessedDecMid("Yes");
 		update(m);
 end
 
-rule "Rule 47 Set text for CorneringHi for ok driver behavior"
+rule "Rule 58 Set text for CorneringHi for ok driver behavior"
 	when
 		m: Message( typeOfDriver == "ok" , partCorneringHi/total > eventOfLowerImportance, processedCorneringHi == "No" )
 	then
@@ -700,11 +737,13 @@ rule "Rule 47 Set text for CorneringHi for ok driver behavior"
 		content[1] = m.getPartCorneringHi();
 		content[2] = df.format((m.getPartCorneringHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		
+		wizard.addTextPositive("Rule 58 Set text for CorneringHi for ok driver behavior", content);
 		m.setProcessedCorneringHi("Yes");
 		update(m);
 end
 
-rule "Rule 48 Set text for CorneringMid for ok driver behavior"
+rule "Rule 59 Set text for CorneringMid for ok driver behavior"
 	when
 		m: Message( typeOfDriver == "ok" , partCorneringMid/total > eventOfLowerImportance, processedCorneringMid == "No" )
 	then
@@ -715,11 +754,13 @@ rule "Rule 48 Set text for CorneringMid for ok driver behavior"
 		content[1] = m.getPartCorneringMid();
 		content[2] = df.format((m.getPartCorneringMid() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		
+		wizard.addTextPositive("Rule 59 Set text for CorneringMid for ok driver behavior", content);
 		m.setProcessedCorneringMid("Yes");
 		update(m);
 end
 
-rule "Rule 49 Set text for Speed limit for ok driver behavior"
+rule "Rule 60 Set text for Speed limit for ok driver behavior"
 	when
 		m: Message( typeOfDriver == "ok" , partSpeedLimit/total > eventOfLowerImportance, processedSpeedLimit == "No" )
 	then
@@ -730,11 +771,13 @@ rule "Rule 49 Set text for Speed limit for ok driver behavior"
 		content[1] = m.getPartSpeedLimit();
 		content[2] = df.format((m.getPartSpeedLimit() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Speed limit notification' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, sto dokazuje nasu tvrdnju da je ovaj vozac primeran vozac.");
+		
+		wizard.addTextPositive("Rule 60 Set text for Speed limit for ok driver behavior", content);
 		m.setProcessedSpeedLimit("Yes");
 		update(m);
 end
 
-rule "Rule 50 Set text for AbruptTurningHi for ok driver behavior"
+rule "Rule 61 Set text for AbruptTurningHi for ok driver behavior"
 	when
 		m: Message( typeOfDriver == "ok", partAbruptTurningHi/total > eventOfHighImportance, processedAbruptTurningHi == "No" )
 	then
@@ -745,11 +788,13 @@ rule "Rule 50 Set text for AbruptTurningHi for ok driver behavior"
 		content[1] = m.getPartAbruptTurningHi();
 		content[2] = df.format((m.getPartAbruptTurningHi() / m.getLimit())*100);	
 		System.out.println("Ukupan broj dogadjaja 'Abrupt turning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
+		
+		wizard.addTextWarning("Rule 61 Set text for AbruptTurningHi for ok driver behavior", content);
 		m.setProcessedAbruptTurningHi("Yes");
 		update(m);
 end 
 
-rule "Rule 51 Set text for AggressiveLaneChangeHi for ok driver behaviour"
+rule "Rule 62 Set text for AggressiveLaneChangeHi for ok driver behaviour"
 	when
 		m: Message( typeOfDriver == "ok", partAggressiveLaneChangeHi/total > eventOfHighImportance, processedAggressiveLaneChangeHi == "No" )
 	then
@@ -760,11 +805,13 @@ rule "Rule 51 Set text for AggressiveLaneChangeHi for ok driver behaviour"
 		content[1] = m.getPartAggressiveLaneChangeHi();
 		content[2] = df.format((m.getPartAggressiveLaneChangeHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Abrupt turning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
+		
+		wizard.addTextWarning("Rule 62 Set text for AggressiveLaneChangeHi for ok driver behaviour", content);
 		m.setProcessedAggressiveLaneChangeHi("Yes");
 		update(m);
 end 
 
-rule "Rule 52 Set text for AggressiveLaneChangeMid for ok driver behaviour"
+rule "Rule 63 Set text for AggressiveLaneChangeMid for ok driver behaviour"
 	when
 		m: Message( typeOfDriver == "ok", partAggressiveLaneChangeMid/total > eventOfHighImportance, processedAggressiveLaneChangeMid == "No" )
 	then
@@ -775,11 +822,13 @@ rule "Rule 52 Set text for AggressiveLaneChangeMid for ok driver behaviour"
 		content[1] = m.getPartAggressiveLaneChangeMid();
 		content[2] = df.format((m.getPartAggressiveLaneChangeMid() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Aggressive lane change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise ukoliko vozac agresivno zaobilazi vozilo ili grupu vozila. Ucesca ovog dogadjaja u ukupnoj sumi pokazuje nam da je vozac agresivan prilikom zaobilazenja drugih ucesnika u saobrcaju i da na taj nacin ugrozava kako svoju tako i bezbednost drugih.");
+		
+		wizard.addTextWarning("Rule 63 Set text for AggressiveLaneChangeMid for ok driver behaviour", content);
 		m.setProcessedAggressiveLaneChangeMid("Yes");
 		update(m);
 end 
 
-rule "Rule 53 Set text for BarrierAvoidanceHi for ok driver behaviour"
+rule "Rule 64 Set text for BarrierAvoidanceHi for ok driver behaviour"
 	when
 		m: Message( typeOfDriver == "ok", partBarrierAvoidanceHi/total > eventOfHighImportance, processedBarrierAvoidanceHi == "No" )
 	then
@@ -790,11 +839,13 @@ rule "Rule 53 Set text for BarrierAvoidanceHi for ok driver behaviour"
 		content[1] = m.getPartBarrierAvoidanceHi();
 		content[2] = df.format((m.getPartAbruptTurningHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
+		
+		wizard.addTextWarning("Rule 64 Set text for BarrierAvoidanceHi for ok driver behaviour", content);
 		m.setProcessedBarrierAvoidanceHi("Yes");
 		update(m);
 end 
 
-rule "Rule 54 Set text for BarrierAvoidanceMid for ok driver behaviour"
+rule "Rule 65 Set text for BarrierAvoidanceMid for ok driver behaviour"
 	when
 		m: Message( typeOfDriver == "ok", partBarrierAvoidanceMid/total > eventOfHighImportance, processedBarrierAvoidanceMid == "No" )
 	then
@@ -805,11 +856,13 @@ rule "Rule 54 Set text for BarrierAvoidanceMid for ok driver behaviour"
 		content[1] = m.getPartBarrierAvoidanceMid();
 		content[2] = df.format((m.getPartBarrierAvoidanceMid() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
+		
+		wizard.addTextWarning("Rule 65 Set text for BarrierAvoidanceMid for ok driver behaviour", content);
 		m.setProcessedBarrierAvoidanceHi("Yes");
 		update(m);
 end 
 
-rule "Rule 55 Set text for SkiddingHi for ok driver behaviour"
+rule "Rule 66 Set text for SkiddingHi for ok driver behaviour"
 	when
 		m: Message( typeOfDriver == "ok", partSkiddingHi/total > eventOfHighImportance, processedSkiddingHi == "No" )
 	then
@@ -820,11 +873,13 @@ rule "Rule 55 Set text for SkiddingHi for ok driver behaviour"
 		content[1] = m.getPartSkiddingHi();
 		content[2] = df.format((m.getPartSkiddingHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Vehicle skidding severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
+		
+		wizard.addTextWarning("Rule 66 Set text for SkiddingHi for ok driver behaviour", content);
 		m.setProcessedSkiddingHi("Yes");
 		update(m);
 end 
 
-rule "Rule 43 Set text for AccHi for bad driver behavior"
+rule "Rule 67 Set text for AccHi for bad driver behavior"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive") , partAccHi/total > eventOfLowerImportance, processedAccHi == "No" )
 	then
@@ -836,11 +891,13 @@ rule "Rule 43 Set text for AccHi for bad driver behavior"
 		content[2] = df.format((m.getPartAccHi() / m.getLimit())*100);
 		content[3] = m.getNumHiAcc() - m.getEventPerKmAccHi();
 		System.out.println("Ukupan broj dogadjaja 'Harsh acceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Kako bi popravio svoje ponasanje vozac mora smanjiti agresivnost prilikom naglog ubrzanja za " + content[3] + ".");
+		
+		wizard.addText("Rule 67 Set text for AccHi for bad driver behavior", content);
 		m.setProcessedAccHi("Yes");
 		update(m);
 end 
 
-rule "Rule 44 Set text for AccMid for bad driver behavior"
+rule "Rule 68 Set text for AccMid for bad driver behavior"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive") , partAccMid/total > eventOfLowerImportance, processedAccMid == "No" )
 	then
@@ -852,11 +909,13 @@ rule "Rule 44 Set text for AccMid for bad driver behavior"
 		content[2] = df.format((m.getPartAccMid() / m.getLimit())*100);
 		content[3] = m.getNumMidAcc() - m.getEventPerKmAccMid();
 		System.out.println("Ukupan broj dogadjaja 'Harsh acceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Kako bi popravio svoje ponasanje vozac mora smanjiti agresivnost prilikom ubrzanja za " + content[3] + ".");
+		
+		wizard.addText("Rule 68 Set text for AccMid for bad driver behavior", content);
 		m.setProcessedAccMid("Yes");
 		update(m);
-end 
+end
 
-rule "Rule 45 Set text for DecHi for bad driver behavior"
+rule "Rule 69 Set text for DecHi for bad driver behavior"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive") , partDecHi/total > eventOfLowerImportance, processedDecHi == "No" )
 	then
@@ -868,11 +927,13 @@ rule "Rule 45 Set text for DecHi for bad driver behavior"
 		content[2] = df.format((m.getPartDecHi() / m.getLimit())*100);
 		content[3] = m.getNumHiDec() - m.getEventPerKmDecHi();
 		System.out.println("Ukupan broj dogadjaja 'Harsh deceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Kako bi popravio svoje ponasanje vozac mora smanjiti agresivna nagla kocenja za: " + content[3] + ".");
+		
+		wizard.addText("Rule 69 Set text for DecHi for bad driver behavior", content);
 		m.setProcessedDecHi("Yes");
 		update(m);
 end
 
-rule "Rule 46 Set text for DecMid for bad driver behavior"
+rule "Rule 70 Set text for DecMid for bad driver behavior"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive") , partDecMid/total > eventOfLowerImportance, processedDecMid == "No" )
 	then
@@ -884,11 +945,13 @@ rule "Rule 46 Set text for DecMid for bad driver behavior"
 		content[2] = df.format((m.getPartDecMid() / m.getLimit())*100);
 		content[3] = m.getNumMidDec() - m.getEventPerKmDecMid();
 		System.out.println("Ukupan broj dogadjaja 'Harsh deceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Kako bi popravio svoje ponasanje vozac mora smanjiti nagla kocenja za: " + content[3] + ".");
+		
+		wizard.addText("Rule 70 Set text for DecMid for bad driver behavior", content);
 		m.setProcessedDecMid("Yes");
 		update(m);
 end
 
-rule "Rule 47 Set text for CorneringHi for bad driver behavior"
+rule "Rule 71 Set text for CorneringHi for bad driver behavior"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive") , partCorneringHi/total > eventOfLowerImportance, processedCorneringHi == "No" )
 	then
@@ -900,11 +963,13 @@ rule "Rule 47 Set text for CorneringHi for bad driver behavior"
 		content[2] = df.format((m.getPartCorneringHi() / m.getLimit())*100);
 		content[3] = m.getNumHiCornering() - m.getEventPerKmCorneringHi();
 		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Kako bi popravio svoje ponasanje vozac mora smanjiti agresivnost prilikom ulazenja u krivinu za: " + content[3] + " dogadjaja.");
+		
+		wizard.addText("Rule 71 Set text for CorneringHi for bad driver behavior", content);
 		m.setProcessedCorneringHi("Yes");
 		update(m);
 end
 
-rule "Rule 48 Set text for CorneringMid for bad driver behavior"
+rule "Rule 72 Set text for CorneringMid for bad driver behavior"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive") , partCorneringMid/total > eventOfLowerImportance, processedCorneringMid == "No" )
 	then
@@ -916,101 +981,121 @@ rule "Rule 48 Set text for CorneringMid for bad driver behavior"
 		content[2] = df.format((m.getPartCorneringMid() / m.getLimit())*100);
 		content[3] = m.getNumMidCornering() - m.getEventPerKmCorneringMid();
 		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Kako bi popravio svoje ponasanje vozac mora smanjiti nagle ulaske u krivinu za: " + content[3] + " dogadjaja.");
+		
+		wizard.addText("Rule 72 Set text for CorneringMid for bad driver behavior", content);
 		m.setProcessedCorneringMid("Yes");
 		update(m);
 end
 
-rule "Rule 49 Set text for Speed limit for bad driver behavior"
+rule "Rule 73 Set text for Speed limit for bad driver behavior"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive") , partSpeedLimit/total > eventOfLowerImportance, processedSpeedLimit == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumSpeedLimit();
 		content[1] = m.getPartSpeedLimit();
 		content[2] = df.format((m.getPartSpeedLimit() / m.getLimit())*100);
+		content[3] = m.getPartSpeedLimit() - m.getEventPerKmSpeedLimit();
 		System.out.println("Ukupan broj dogadjaja 'Speed limit notification' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj predstavlja direktno krsenje pravila ponasanja vlasnika flote. Prelazak dozvoljenog limita direktno krsi pravila kompanije i kao takvo treba biti sankcionisano.");
+		
+		wizard.addText("Rule 73 Set text for Speed limit for bad driver behavior", content);
 		m.setProcessedSpeedLimit("Yes");
 		update(m);
 end
 
-rule "Rule 50 Set text for AbruptTurningHi if driver is agresive"
+rule "Rule 74 Set text for AbruptTurningHi if driver is agresive"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive"), partAbruptTurningHi/total > eventOfHighImportance, processedAbruptTurningHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumHiAbruptTurning();
 		content[1] = m.getPartAbruptTurningHi();
-		content[2] = df.format((m.getPartAbruptTurningHi() / m.getLimit())*100);	
+		content[2] = df.format((m.getPartAbruptTurningHi() / m.getLimit())*100);
+		content[3] = m.getPartAbruptTurningHi() - m.getEventPerKmAbruptTurningHi();	
 		System.out.println("Ukupan broj dogadjaja 'Abrupt turning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise ako vozac gubi kontrolu nad vozilom prilikom skretanja. Pojava ovog dogadjaja u ukupnoj sumi negativnih bodova govori nam o tome da vozac ozbiljno ugrozava svoju bezbednost.");
+		
+		wizard.addTextWarning("Rule 74 Set text for AbruptTurningHi if driver is agresive", content);
 		m.setProcessedAbruptTurningHi("Yes");
 		update(m);
 end 
 
-rule "Rule 51 Set text for AggressiveLaneChangeHi if driver is agresive"
+rule "Rule 75 Set text for AggressiveLaneChangeHi if driver is agresive"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive"), partAggressiveLaneChangeHi/total > eventOfHighImportance, processedAggressiveLaneChangeHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumHiAggressiveLaneChange();
 		content[1] = m.getPartAggressiveLaneChangeHi();
 		content[2] = df.format((m.getPartAggressiveLaneChangeHi() / m.getLimit())*100);
+		content[3] = m.getPartAggressiveLaneChangeHi() - m.getEventPerKmAggressiveLaneChangeHi();		
 		System.out.println("Ukupan broj dogadjaja 'Aggressive lane change severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise ukoliko vozac veoma agresivno zaobilazi vozilo ili grupu vozila. Ucesca ovog dogadjaja u ukupnoj sumi pokazuje nam da je vozac izuzetno agresivan prilikom zaobilazenja drugih ucesnika u saobracaju. Na ovaj nacin vozac ugrozava kako sebe tako i druge ucesnike u saobracaju.");
+		
+		wizard.addTextWarning("Rule 75 Set text for AggressiveLaneChangeHi if driver is agresive", content);
 		m.setProcessedAggressiveLaneChangeHi("Yes");
 		update(m);
 end 
 
-rule "Rule 52 Set text for AggressiveLaneChangeMid if driver is agresive"
+rule "Rule 76 Set text for AggressiveLaneChangeMid if driver is agresive"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive"), partAggressiveLaneChangeMid/total > eventOfHighImportance, processedAggressiveLaneChangeMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumMidAggressiveLaneChange();
 		content[1] = m.getPartAggressiveLaneChangeMid();
 		content[2] = df.format((m.getPartAggressiveLaneChangeMid() / m.getLimit())*100);
+		content[3] = m.getPartAggressiveLaneChangeMid() - m.getEventPerKmAggressiveLaneChangeMid();
 		System.out.println("Ukupan broj dogadjaja 'Aggressive lane change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise ukoliko vozac agresivno zaobilazi vozilo ili grupu vozila. Ucesca ovog dogadjaja u ukupnoj sumi pokazuje nam da je vozac agresivan prilikom zaobilazenja drugih ucesnika u saobrcaju i da na taj nacin ugrozava kako svoju tako i bezbednost drugih.");
+		
+		wizard.addTextWarning("Rule 76 Set text for AggressiveLaneChangeMid if driver is agresive", content);
 		m.setProcessedAggressiveLaneChangeMid("Yes");
 		update(m);
 end 
 
-rule "Rule 53 Set text for BarrierAvoidanceHi if driver is agresive"
+rule "Rule 77 Set text for BarrierAvoidanceHi if driver is agresive"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive"), partBarrierAvoidanceHi/total > eventOfHighImportance, processedBarrierAvoidanceHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumHiBarrierAvoidance();
 		content[1] = m.getPartBarrierAvoidanceHi();
 		content[2] = df.format((m.getPartAbruptTurningHi() / m.getLimit())*100);
+		content[3] = m.getPartBarrierAvoidanceHi() - m.getEventPerKmBarrierAvoidanceHi();
 		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise u slucaju kada vozac naglo pokusa da zaobidje prepreku na putu, pri tome praveci putanju u obliku latinicnog slova s. Ovaj dogadjaj ukazuje na veoma ozbiljan gubitak kontrole nad vozilom. Pojava ovog dogadjaja u totalnoj sumi negativnih bodova, ukazuje da je vozac veoma ne pazljiv i da time ugrozava bezbednost u saobracaju.");
+		
+		wizard.addTextWarning("Rule 77 Set text for BarrierAvoidanceHi if driver is agresive", content);
 		m.setProcessedBarrierAvoidanceHi("Yes");
 		update(m);
 end 
 
-rule "Rule 54 Set text for BarrierAvoidanceMid if driver is agresive"
+rule "Rule 78 Set text for BarrierAvoidanceMid if driver is agresive"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive"), partBarrierAvoidanceMid/total > eventOfHighImportance, processedBarrierAvoidanceMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumMidBarrierAvoidance();
 		content[1] = m.getPartBarrierAvoidanceMid();
 		content[2] = df.format((m.getPartBarrierAvoidanceMid() / m.getLimit())*100);
+		content[3] = m.getPartBarrierAvoidanceMid() - m.getEventPerKmBarrierAvoidanceMid();
 		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj se generise u slucaju kada vozac pokusa da zaobidje prepreku na putu, pri tome praveci putanju u obliku latinicnog slova s. Ovaj dogadjaj ukazuje na gubitak kontrole nad vozilom. Pojava ovog dogadjaja u totalnoj sumi negativnih bodova, ukazuje da je vozac ne pazljiv u upravljanju vozilom i da time ugrozava bezbednost u saobracaju.");
+		
+		wizard.addTextWarning("Rule 78 Set text for BarrierAvoidanceMid if driver is agresive", content);
 		m.setProcessedBarrierAvoidanceHi("Yes");
 		update(m);
 end 
 
-rule "Rule 55 Set text for SkiddingHi if driver is agresive"
+rule "Rule 79 Set text for SkiddingHi if driver is agresive"
 	when
 		m: Message( typeOfDriver in ("border", "risk", "agresive"), partSkiddingHi/total > eventOfHighImportance, processedSkiddingHi == "No" )
 	then
@@ -1021,11 +1106,15 @@ rule "Rule 55 Set text for SkiddingHi if driver is agresive"
 		content[1] = m.getPartSkiddingHi();
 		content[2] = df.format((m.getPartSkiddingHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Vehicle skidding severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Ovaj dogadjaj se generise kada vozilu pri ulasku u krivinu prokliza zadnji deo u odnosu na prednji (over-steering). Ovo uzrokuje nestabilnost vozila. Pojava ovog dogadjaja u ukupnoj negativnoj sumi znaci da vozac ugrozava bezbednost saobracaja veoma svojim agresivnim ponasanjem.");
+		
+		wizard.addTextWarning("Rule 79 Set text for SkiddingHi if driver is agresive", content);
 		m.setProcessedSkiddingHi("Yes");
 		update(m);
 end 
 
-rule "Rule 43 Set text for AccHi over limit for extreme drivers"
+
+
+rule "Rule 80 Set text for AccHi over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme" , partAccHi > limit, processedAccHi == "No" )
 	then
@@ -1034,14 +1123,16 @@ rule "Rule 43 Set text for AccHi over limit for extreme drivers"
 		Object [] content = new Object[4];
 		content[0] = m.getNumHiAcc();
 		content[1] = m.getPartAccHi();
-		content[2] = df.format((m.getPartAccHi() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartAccHi() - m.getLimit())/m.getLimit()) * 100);
 		content[3] = m.getPartAccHi() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Harsh acceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 80 Set text for AccHi over limit for extreme drivers", content);
 		m.setProcessedAccHi("Yes");
 		update(m);
 end 
 
-rule "Rule 44 Set text for AccMid over limit for extreme drivers"
+rule "Rule 81 Set text for AccMid over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme" , partAccMid > limit, processedAccMid == "No" )
 	then
@@ -1050,14 +1141,16 @@ rule "Rule 44 Set text for AccMid over limit for extreme drivers"
 		Object [] content = new Object[4];
 		content[0] = m.getNumMidAcc();
 		content[1] = m.getPartAccMid();
-		content[2] = df.format((m.getPartAccMid() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartAccMid() - m.getLimit())/ m.getLimit())*100);
 		content[3] = m.getPartAccMid() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Harsh acceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 81 Set text for AccMid over limit for extreme drivers", content);
 		m.setProcessedAccMid("Yes");
 		update(m);
 end
 
-rule "Rule 45 Set text for DecHi over limit for extreme drivers"
+rule "Rule 82 Set text for DecHi over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme" , partDecHi > limit, processedDecHi == "No" )
 	then
@@ -1066,14 +1159,16 @@ rule "Rule 45 Set text for DecHi over limit for extreme drivers"
 		Object [] content = new Object[4];
 		content[0] = m.getNumHiDec();
 		content[1] = m.getPartDecHi();
-		content[2] = df.format((m.getPartDecHi() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartDecHi() - m.getLimit()) / m.getLimit())*100);
 		content[3] = m.getPartDecHi() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Harsh deceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 82 Set text for DecHi over limit for extreme drivers", content);
 		m.setProcessedDecHi("Yes");
 		update(m);
 end
 
-rule "Rule 46 Set text for DecMid over limit for extreme drivers"
+rule "Rule 83 Set text for DecMid over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme", partDecMid > limit, processedDecMid == "No" )
 	then
@@ -1082,14 +1177,16 @@ rule "Rule 46 Set text for DecMid over limit for extreme drivers"
 		Object [] content = new Object[4];
 		content[0] = m.getNumMidDec();
 		content[1] = m.getPartDecMid();
-		content[2] = df.format((m.getPartDecMid() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartDecMid() - m.getLimit())/m.getLimit())*100);
 		content[3] = m.getPartDecMid() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Harsh deceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 83 Set text for DecMid over limit for extreme drivers", content);
 		m.setProcessedDecMid("Yes");
 		update(m);
 end
 
-rule "Rule 47 Set text for CorneringHi over limit for extreme drivers"
+rule "Rule 84 Set text for CorneringHi over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme", partCorneringHi > limit, processedCorneringHi == "No" )
 	then
@@ -1098,14 +1195,16 @@ rule "Rule 47 Set text for CorneringHi over limit for extreme drivers"
 		Object [] content = new Object[4];
 		content[0] = m.getNumHiCornering();
 		content[1] = m.getPartCorneringHi();
-		content[2] = df.format((m.getPartCorneringHi() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartCorneringHi() - m.getLimit()) / m.getLimit())*100);
 		content[3] = m.getPartCorneringHi() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 84 Set text for CorneringHi over limit for extreme drivers", content);
 		m.setProcessedCorneringHi("Yes");
 		update(m);
 end
 
-rule "Rule 48 Set text for CorneringMid over limit for extreme drivers"
+rule "Rule 85 Set text for CorneringMid over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme", partCorneringMid > limit, processedCorneringMid == "No" )
 	then
@@ -1114,14 +1213,16 @@ rule "Rule 48 Set text for CorneringMid over limit for extreme drivers"
 		Object [] content = new Object[4];
 		content[0] = m.getNumMidCornering();
 		content[1] = m.getPartCorneringMid();
-		content[2] = df.format((m.getPartCorneringMid() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartCorneringMid() - m.getLimit())/ m.getLimit())*100);
 		content[3] = m.getPartCorneringMid() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 85 Set text for CorneringMid over limit for extreme drivers", content);
 		m.setProcessedCorneringMid("Yes");
 		update(m);
 end
 
-rule "Rule 49 Set text for Speed limit over limit for extreme drivers"
+rule "Rule 86 Set text for Speed limit over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme", partSpeedLimit > limit, processedSpeedLimit == "No" )
 	then
@@ -1130,14 +1231,16 @@ rule "Rule 49 Set text for Speed limit over limit for extreme drivers"
 		Object [] content = new Object[3];
 		content[0] = m.getNumSpeedLimit();
 		content[1] = m.getPartSpeedLimit();
-		content[2] = df.format((m.getPartSpeedLimit() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartSpeedLimit() - m.getLimit()) / m.getLimit())*100);
 		content[3] = m.getPartSpeedLimit() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Speed limit notification' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 86 Set text for Speed limit over limit for extreme drivers", content);
 		m.setProcessedSpeedLimit("Yes");
 		update(m);
 end
 
-rule "Rule 50 Set text for AbruptTurningHi over limit for extreme drivers"
+rule "Rule 87 Set text for AbruptTurningHi over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme", partAbruptTurningHi > limit, processedAbruptTurningHi == "No" )
 	then
@@ -1146,14 +1249,16 @@ rule "Rule 50 Set text for AbruptTurningHi over limit for extreme drivers"
 		Object [] content = new Object[3];
 		content[0] = m.getNumHiAbruptTurning();
 		content[1] = m.getPartAbruptTurningHi();
-		content[2] = df.format((m.getPartAbruptTurningHi() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartAbruptTurningHi() - m.getLimit()) / m.getLimit())*100);
 		content[3] = m.getPartAbruptTurningHi() - m.getLimit();	
 		System.out.println("Ukupan broj dogadjaja 'Abrupt turning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 87 Set text for AbruptTurningHi over limit for extreme drivers", content);
 		m.setProcessedAbruptTurningHi("Yes");
 		update(m);
 end 
 
-rule "Rule 51 Set text for AggressiveLaneChangeHi over limit for extreme drivers"
+rule "Rule 88 Set text for AggressiveLaneChangeHi over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme", partAggressiveLaneChangeHi > limit, processedAggressiveLaneChangeHi == "No" )
 	then
@@ -1162,14 +1267,16 @@ rule "Rule 51 Set text for AggressiveLaneChangeHi over limit for extreme drivers
 		Object [] content = new Object[3];
 		content[0] = m.getNumHiAggressiveLaneChange();
 		content[1] = m.getPartAggressiveLaneChangeHi();
-		content[2] = df.format((m.getPartAggressiveLaneChangeHi() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartAggressiveLaneChangeHi() - m.getLimit()) / m.getLimit())*100);
 		content[3] = m.getPartAggressiveLaneChangeHi() - m.getLimit();	
 		System.out.println("Ukupan broj dogadjaja 'Aggressive lane change severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 88 Set text for AggressiveLaneChangeHi over limit for extreme drivers", content);
 		m.setProcessedAggressiveLaneChangeHi("Yes");
 		update(m);
 end 
 
-rule "Rule 52 Set text for AggressiveLaneChangeMid over limit for extreme drivers"
+rule "Rule 89 Set text for AggressiveLaneChangeMid over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme", partAggressiveLaneChangeMid > limit, processedAggressiveLaneChangeMid == "No" )
 	then
@@ -1178,14 +1285,16 @@ rule "Rule 52 Set text for AggressiveLaneChangeMid over limit for extreme driver
 		Object [] content = new Object[3];
 		content[0] = m.getNumMidAggressiveLaneChange();
 		content[1] = m.getPartAggressiveLaneChangeMid();
-		content[2] = df.format((m.getPartAggressiveLaneChangeMid() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartAggressiveLaneChangeMid() - m.getLimit())/ m.getLimit())*100);
 		content[3] = m.getPartAggressiveLaneChangeMid() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Aggressive lane change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 89 Set text for AggressiveLaneChangeMid over limit for extreme drivers", content);
 		m.setProcessedAggressiveLaneChangeMid("Yes");
 		update(m);
 end 
 
-rule "Rule 53 Set text for BarrierAvoidanceHi over limit for extreme drivers"
+rule "Rule 90 Set text for BarrierAvoidanceHi over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme", partBarrierAvoidanceHi > limit, processedBarrierAvoidanceHi == "No" )
 	then
@@ -1194,14 +1303,16 @@ rule "Rule 53 Set text for BarrierAvoidanceHi over limit for extreme drivers"
 		Object [] content = new Object[3];
 		content[0] = m.getNumHiBarrierAvoidance();
 		content[1] = m.getPartBarrierAvoidanceHi();
-		content[2] = df.format((m.getPartBarrierAvoidanceHi() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartBarrierAvoidanceHi() - m.getLimit()) / m.getLimit())*100);
 		content[3] = m.getPartBarrierAvoidanceHi() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 90 Set text for BarrierAvoidanceHi over limit for extreme drivers", content);
 		m.setProcessedBarrierAvoidanceHi("Yes");
 		update(m);
 end 
 
-rule "Rule 54 Set text for BarrierAvoidanceMid over limit for extreme drivers"
+rule "Rule 91 Set text for BarrierAvoidanceMid over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme", partBarrierAvoidanceMid > limit, processedBarrierAvoidanceMid == "No" )
 	then
@@ -1210,14 +1321,16 @@ rule "Rule 54 Set text for BarrierAvoidanceMid over limit for extreme drivers"
 		Object [] content = new Object[3];
 		content[0] = m.getNumMidBarrierAvoidance();
 		content[1] = m.getPartBarrierAvoidanceMid();
-		content[2] = df.format((m.getPartBarrierAvoidanceMid() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartBarrierAvoidanceMid() - m.getLimit())/ m.getLimit())*100);
 		content[3] = m.getPartBarrierAvoidanceMid() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 91 Set text for BarrierAvoidanceMid over limit for extreme drivers", content);
 		m.setProcessedBarrierAvoidanceHi("Yes");
 		update(m);
 end 
 
-rule "Rule 55 Set text for SkiddingHi over limit for extreme drivers"
+rule "Rule 92 Set text for SkiddingHi over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme", partSkiddingHi > limit, processedSkiddingHi == "No" )
 	then
@@ -1226,20 +1339,18 @@ rule "Rule 55 Set text for SkiddingHi over limit for extreme drivers"
 		Object [] content = new Object[3];
 		content[0] = m.getNumHiSkidding();
 		content[1] = m.getPartSkiddingHi();
-		content[2] = df.format((m.getPartSkiddingHi() / m.getLimit())*100);
+		content[2] = df.format(((m.getPartSkiddingHi() - m.getLimit()) / m.getLimit())*100);
 		content[3] = m.getPartSkiddingHi() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Vehicle skidding severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		
+		wizard.addTextVeryNegative("Rule 92 Set text for SkiddingHi over limit for extreme drivers", content);
 		m.setProcessedSkiddingHi("Yes");
 		update(m);
-end 
+end
 
-
-
-
-
-rule "Rule 43 Set text for AccHi below the limit for extreme drivers"
+rule "Rule 93 Set text for AccHi below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme" , partAccHi < limit, processedAccHi == "No" )
+		m: Message( typeOfDriver == "extreme" , partAccHi > 0, partAccHi < limit, processedAccHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1248,13 +1359,15 @@ rule "Rule 43 Set text for AccHi below the limit for extreme drivers"
 		content[1] = m.getPartAccHi();
 		content[2] = df.format((m.getPartAccHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Harsh acceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman." );
+		
+		wizard.addTextNegative("Rule 93 Set text for AccHi below the limit for extreme drivers", content);
 		m.setProcessedAccHi("Yes");
 		update(m);
 end 
 
-rule "Rule 44 Set text for AccMid below the limit for extreme drivers"
+rule "Rule 94 Set text for AccMid below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme" , partAccMid < limit, processedAccMid == "No" )
+		m: Message( typeOfDriver == "extreme" , partAccMid > 0, partAccMid < limit, processedAccMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1263,13 +1376,15 @@ rule "Rule 44 Set text for AccMid below the limit for extreme drivers"
 		content[1] = m.getPartAccMid();
 		content[2] = df.format((m.getPartAccMid() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Harsh acceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 94 Set text for AccMid below the limit for extreme drivers", content);
 		m.setProcessedAccMid("Yes");
 		update(m);
 end
 
-rule "Rule 45 Set text for DecHi below the limit for extreme drivers"
+rule "Rule 95 Set text for DecHi below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme" , partDecHi < limit, processedDecHi == "No" )
+		m: Message( typeOfDriver == "extreme" , partDecHi > 0, partDecHi < limit, processedDecHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1277,15 +1392,16 @@ rule "Rule 45 Set text for DecHi below the limit for extreme drivers"
 		content[0] = m.getNumHiDec();
 		content[1] = m.getPartDecHi();
 		content[2] = df.format((m.getPartDecHi() / m.getLimit())*100);
-		content[3] = m.getPartDecHi() - m.getLimit();
 		System.out.println("Ukupan broj dogadjaja 'Harsh deceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 95 Set text for DecHi below the limit for extreme drivers", content);
 		m.setProcessedDecHi("Yes");
 		update(m);
 end
 
-rule "Rule 46 Set text for DecMid below the limit for extreme drivers"
+rule "Rule 96 Set text for DecMid below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme", partDecMid < limit, processedDecMid == "No" )
+		m: Message( typeOfDriver == "extreme", partDecMid > 0, partDecMid < limit, processedDecMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1294,13 +1410,15 @@ rule "Rule 46 Set text for DecMid below the limit for extreme drivers"
 		content[1] = m.getPartDecMid();
 		content[2] = df.format((m.getPartDecMid() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Harsh deceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 96 Set text for DecMid below the limit for extreme drivers", content);
 		m.setProcessedDecMid("Yes");
 		update(m);
 end
 
-rule "Rule 47 Set text for CorneringHi below the limit for extreme drivers"
+rule "Rule 97 Set text for CorneringHi below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme", partCorneringHi < limit, processedCorneringHi == "No" )
+		m: Message( typeOfDriver == "extreme", partCorneringHi > 0, partCorneringHi < limit, processedCorneringHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1309,13 +1427,15 @@ rule "Rule 47 Set text for CorneringHi below the limit for extreme drivers"
 		content[1] = m.getPartCorneringHi();
 		content[2] = df.format((m.getPartCorneringHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 97 Set text for CorneringHi below the limit for extreme drivers", content);
 		m.setProcessedCorneringHi("Yes");
 		update(m);
 end
 
-rule "Rule 48 Set text for CorneringMid below the limit for extreme drivers"
+rule "Rule 98 Set text for CorneringMid below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme", partCorneringMid < limit, processedCorneringMid == "No" )
+		m: Message( typeOfDriver == "extreme", partCorneringMid >0, partCorneringMid < limit, processedCorneringMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1324,13 +1444,15 @@ rule "Rule 48 Set text for CorneringMid below the limit for extreme drivers"
 		content[1] = m.getPartCorneringMid();
 		content[2] = df.format((m.getPartCorneringMid() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 98 Set text for CorneringMid below the limit for extreme drivers", content);
 		m.setProcessedCorneringMid("Yes");
 		update(m);
 end
 
-rule "Rule 49 Set text for Speed limit below the limit for extreme drivers"
+rule "Rule 99 Set text for Speed limit below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme", partSpeedLimit < limit, processedSpeedLimit == "No" )
+		m: Message( typeOfDriver == "extreme", partSpeedLimit > 0, partSpeedLimit < limit, processedSpeedLimit == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1339,13 +1461,15 @@ rule "Rule 49 Set text for Speed limit below the limit for extreme drivers"
 		content[1] = m.getPartSpeedLimit();
 		content[2] = df.format((m.getPartSpeedLimit() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Speed limit notification' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 99 Set text for Speed limit below the limit for extreme drivers", content);
 		m.setProcessedSpeedLimit("Yes");
 		update(m);
 end
 
-rule "Rule 50 Set text for AbruptTurningHi below the limit for extreme drivers"
+rule "Rule 100 Set text for AbruptTurningHi below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme", partAbruptTurningHi < limit, processedAbruptTurningHi == "No" )
+		m: Message( typeOfDriver == "extreme", partAbruptTurningHi > 0, partAbruptTurningHi < limit, processedAbruptTurningHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1354,13 +1478,15 @@ rule "Rule 50 Set text for AbruptTurningHi below the limit for extreme drivers"
 		content[1] = m.getPartAbruptTurningHi();
 		content[2] = df.format((m.getPartAbruptTurningHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Abrupt turning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 100 Set text for AbruptTurningHi below the limit for extreme drivers", content);
 		m.setProcessedAbruptTurningHi("Yes");
 		update(m);
 end 
 
-rule "Rule 51 Set text for AggressiveLaneChangeHi below the limit for extreme drivers"
+rule "Rule 101 Set text for AggressiveLaneChangeHi below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme", partAggressiveLaneChangeHi < limit, processedAggressiveLaneChangeHi == "No" )
+		m: Message( typeOfDriver == "extreme", partAggressiveLaneChangeHi > 0, partAggressiveLaneChangeHi < limit, processedAggressiveLaneChangeHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1369,13 +1495,15 @@ rule "Rule 51 Set text for AggressiveLaneChangeHi below the limit for extreme dr
 		content[1] = m.getPartAggressiveLaneChangeHi();
 		content[2] = df.format((m.getPartAggressiveLaneChangeHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Aggressive lane change severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 101 Set text for AggressiveLaneChangeHi below the limit for extreme drivers", content);
 		m.setProcessedAggressiveLaneChangeHi("Yes");
 		update(m);
 end 
 
-rule "Rule 52 Set text for AggressiveLaneChangeMid below the limit for extreme drivers"
+rule "Rule 102 Set text for AggressiveLaneChangeMid below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme", partAggressiveLaneChangeMid < limit, processedAggressiveLaneChangeMid == "No" )
+		m: Message( typeOfDriver == "extreme", partAggressiveLaneChangeMid > 0, partAggressiveLaneChangeMid < limit, processedAggressiveLaneChangeMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1384,13 +1512,15 @@ rule "Rule 52 Set text for AggressiveLaneChangeMid below the limit for extreme d
 		content[1] = m.getPartAggressiveLaneChangeMid();
 		content[2] = df.format((m.getPartAggressiveLaneChangeMid() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Aggressive lane change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 102 Set text for AggressiveLaneChangeMid below the limit for extreme drivers", content);
 		m.setProcessedAggressiveLaneChangeMid("Yes");
 		update(m);
 end 
 
-rule "Rule 53 Set text for BarrierAvoidanceHi below the limit for extreme drivers"
+rule "Rule 103 Set text for BarrierAvoidanceHi below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme", partBarrierAvoidanceHi < limit, processedBarrierAvoidanceHi == "No" )
+		m: Message( typeOfDriver == "extreme", partBarrierAvoidanceHi > 0, partBarrierAvoidanceHi < limit, processedBarrierAvoidanceHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1399,13 +1529,15 @@ rule "Rule 53 Set text for BarrierAvoidanceHi below the limit for extreme driver
 		content[1] = m.getPartBarrierAvoidanceHi();
 		content[2] = df.format((m.getPartBarrierAvoidanceHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 103 Set text for BarrierAvoidanceHi below the limit for extreme drivers", content);
 		m.setProcessedBarrierAvoidanceHi("Yes");
 		update(m);
 end 
 
-rule "Rule 54 Set text for BarrierAvoidanceMid below the limit for extreme drivers"
+rule "Rule 104 Set text for BarrierAvoidanceMid below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme", partBarrierAvoidanceMid < limit, processedBarrierAvoidanceMid == "No" )
+		m: Message( typeOfDriver == "extreme", partBarrierAvoidanceMid > 0, partBarrierAvoidanceMid < limit, processedBarrierAvoidanceMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1414,13 +1546,15 @@ rule "Rule 54 Set text for BarrierAvoidanceMid below the limit for extreme drive
 		content[1] = m.getPartBarrierAvoidanceMid();
 		content[2] = df.format((m.getPartBarrierAvoidanceMid() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 104 Set text for BarrierAvoidanceMid below the limit for extreme drivers", content);
 		m.setProcessedBarrierAvoidanceHi("Yes");
 		update(m);
 end 
 
-rule "Rule 55 Set text for SkiddingHi below the limit for extreme drivers"
+rule "Rule 105 Set text for SkiddingHi below the limit for extreme drivers"
 	when
-		m: Message( typeOfDriver == "extreme", partSkiddingHi < limit, processedSkiddingHi == "No" )
+		m: Message( typeOfDriver == "extreme", partSkiddingHi > 0, partSkiddingHi < limit, processedSkiddingHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1429,19 +1563,13 @@ rule "Rule 55 Set text for SkiddingHi below the limit for extreme drivers"
 		content[1] = m.getPartSkiddingHi();
 		content[2] = df.format((m.getPartSkiddingHi() / m.getLimit())*100);
 		System.out.println("Ukupan broj dogadjaja 'Vehicle skidding severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
+		
+		wizard.addTextNegative("Rule 105 Set text for SkiddingHi below the limit for extreme drivers", content);
 		m.setProcessedSkiddingHi("Yes");
 		update(m);
 end
 
-
-
-
-
-
-
-
-
-rule "Rule 56 Additionally conclusion about speeding"
+rule "Rule 106 Additionally conclusion about speeding"
 	when
 		m: Message( typeOfDriver in ("ok", "border", "risk", "agresive"), additionallyConclusion1 == "No") and 
 		( Message( processedAccHi == "Yes", processedAccMid == "Yes" ) or
@@ -1450,11 +1578,13 @@ rule "Rule 56 Additionally conclusion about speeding"
 		  Message( processedAccHi == "Yes", processedAccMid == "Yes", processedSpeedLimit == "Yes" ) )
 	then
 		System.out.println("Ocigledno je da ovaj vozac voli da vozi brzo. Treba delovati savetodavno da smanji brzinu prilikom voznje kako bi se smanjili i negativni poeni koje on pravi ovakvim ponasanjem");
+		
+		wizard.addText("Rule 106 Additionally conclusion about speeding", null);
 		m.setAdditionallyConclusion1("Yes");
 		update(m);
 end
 
-rule "Rule 57 Additionally conclusion about avoidance"
+rule "Rule 107 Additionally conclusion about avoidance"
 	when
 		m: Message( typeOfDriver in ("ok", "border", "risk", "agresive"), additionallyConclusion2 == "No") and
 		( Message( processedDecHi == "Yes", processedDecHi == "Yes" ) or
@@ -1464,11 +1594,13 @@ rule "Rule 57 Additionally conclusion about avoidance"
 		)
 	then
 		System.out.println("Ovaj vozac je ocigledno nepazljiv prilikom voznje. Trebalo bi ga savetovati da vodi vise racuna prilikom voznje kako bi smanjio broj negativnih poena");
+
+		wizard.addText("Rule 107 Additionally conclusion about avoidance", null);
 		m.setAdditionallyConclusion2("Yes");
 		update(m);
 end;
 
-rule "Rule 58 Additionally conclusion about cornering"
+rule "Rule 108 Additionally conclusion about cornering"
 	when
 		m: Message( typeOfDriver in ("ok", "border", "risk", "agresive"), additionallyConclusion3 == "No") and
 		( Message( typeOfDriver in ("ok", "border", "risk", "agresive"), processedCorneringHi == "Yes", processedCorneringMid  == "Yes" ) or
@@ -1478,6 +1610,8 @@ rule "Rule 58 Additionally conclusion about cornering"
 	    )	
 	then
 		System.out.println("Vozac ocigledno voli da rizikuje u krivini. Trebalo bi ga savetovati da malo laganije ulazi u krivinu kako bi smanjio ukupan broj negativnih bodova.");
+		
+		wizard.addText("Rule 108 Additionally conclusion about cornering", null);
 		m.setAdditionallyConclusion3("Yes");
 		update(m);
 end
