@@ -3,6 +3,10 @@ package com.execute.obj;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import com.execute.obj.event.SpeedLimit;
 import com.execute.obj.event.SpinningHi;
@@ -44,6 +48,7 @@ public class Message {
 	protected float kmBase;
 	// klasifikacija kilometraze u km
 	protected int totalDistanceZeroKm;
+	protected int boundaryTraveledDistanceKm;
 	protected int totalDistanceMidKm;
 	protected int totalDistanceAverageKm;
 	protected int totalDistanceHiKm;
@@ -60,7 +65,7 @@ public class Message {
     // sume koje dobijam iz baze podataka
     protected float totalTraveledDistance;
     protected int totalEvents;
-    protected int driverId;
+    protected String driverId;
     protected int numMidAcc;
     protected int numHiAcc;
     protected int numMidDec;
@@ -102,6 +107,9 @@ public class Message {
     protected String report;
     /**
      * none - no set type of driver
+     * unknown - we don't have enough data to determine driver behaviour
+     * test-driver - driver was probably just testing a vehicle and installed device
+     * exelent - drivers that total sum is 0
      * ok - safe group
      * border - drivers at the border risk
      * risk - risk group of drivers
@@ -132,7 +140,6 @@ public class Message {
 	
             
     public Message() {
-    	
     	//@todo napuni config promenljive iz nekog config fajla osnova je 1000 km
     	this.totalEventPerKm = 150;
     	this.eventPerKmAbruptTurningHi = 1;
@@ -160,6 +167,7 @@ public class Message {
     	this.dateTo = "2014-05-30";
 
     	this.totalDistanceZeroKm = 0;
+    	this.boundaryTraveledDistanceKm = 100; 
     	this.totalDistanceMidKm = 1000;
     	this.totalDistanceAverageKm = 2500;
     	this.totalDistanceHiKm = 5000;
@@ -189,63 +197,47 @@ public class Message {
     	this.eventOfHighImportance =  Integer.MIN_VALUE;
     }   
     
-    public void setRestData() {
+//    public void setRestData() {
+	public void setRestData(JSONObject obj) {
+    	this.numHiAbruptTurning = ((Long) obj.get("numHiAbruptTurning")).intValue();
+    	this.numHiAcc = ((Long) obj.get("numHiAcc")).intValue();
+    	this.numHiAggressiveLaneChange = ((Long) obj.get("numHiAggressiveLaneChange")).intValue();
+    	this.numHiBarrierAvoidance = ((Long) obj.get("numHiBarrierAvoidance")).intValue();
+    	this.numHiCornering = ((Long) obj.get("numHiCornering")).intValue();
+    	this.numHiDec = ((Long) obj.get("numHiDec")).intValue();    	
+    	this.numHiSkidding = ((Long) obj.get("numHiSkidding")).intValue();
+    	this.numMidAcc = ((Long) obj.get("numMidAcc")).intValue();
+    	this.numMidAggressiveLaneChange = ((Long) obj.get("numMidAggressiveLaneChange")).intValue();
+    	this.numMidBarrierAvoidance = ((Long) obj.get("numMidBarrierAvoidance")).intValue();
+    	this.numMidCornering = ((Long) obj.get("numMidCornering")).intValue();
+    	this.numMidDec = ((Long) obj.get("numMidDec")).intValue();
+    	this.numSpeedLimit = ((Long) obj.get("numSpeedLimit")).intValue();
+    	this.totalTraveledDistance = ((Long) obj.get("totalTraveledDistance")).floatValue();
+    	this.totalEvents = ((Long) obj.get("totalEvents")).intValue();
+    	this.driverId = (String) obj.get("vin");
+//    	Object vin = obj.get("vin");
     	
-    	this.numHiAbruptTurning = 2;
-    	this.numHiAcc = 20;
-    	this.numHiAggressiveLaneChange = 7;
-    	this.numHiBarrierAvoidance = 1;
-    	this.numHiCornering = 10;
-    	this.numHiDec = 12;
-    	this.numHiSkidding = 1;
-    	this.numHiSpinning = 7;
+    	this.numHiSpinning = ((Long) obj.get("numHiBarrierAvoidance")).intValue();
     	this.numHiSpinningAllowed = Integer.MIN_VALUE;
     	this.numHiSpinningNotAllowed = Integer.MIN_VALUE;
-    	this.numMidAcc = 11;
-    	this.numMidAggressiveLaneChange = 1;
-    	this.numMidBarrierAvoidance = 1;
-    	this.numMidCornering = 37;
-    	this.numMidDec = 18;
-    	this.numSpeedLimit = 8;
-    	this.totalTraveledDistance = (float)1001.0;
-    	this.totalEvents = 160;
-    	this.driverId = 1234;
+    	    	
+    	JSONArray collection1 = (JSONArray) obj.get("speedLimitEvents");
+		Iterator<JSONObject> iterator1 = collection1.iterator();
     	
-//    	SpinningHi sh4 = new SpinningHi("3", "34", "2014-05-10 13:22:40");
-//    	SpinningHi sh5 = new SpinningHi("3", "34", "2014-05-11 13:22:40");
-//    	SpinningHi sh6 = new SpinningHi("3", "34", "2014-05-12 13:22:40");
-//    	SpinningHi sh7 = new SpinningHi("3", "34", "2014-05-13 15:22:40");
-//    	this.spinningList.add(sh4);
-//    	this.spinningList.add(sh5);
-//    	this.spinningList.add(sh6);
-//    	this.spinningList.add(sh7);
-
-    	SpinningHi sh1 = new SpinningHi("3", "34", "2014-05-20 15:22:40", "54", "8502");
-    	SpinningHi sh2 = new SpinningHi("3", "34", "2014-05-21 12:22:40", "54", "8502");
-    	SpinningHi sh3 = new SpinningHi("3", "34", "2014-05-24 13:22:40", "54", "8502");
-    	this.spinningList.add(sh1);
-    	this.spinningList.add(sh2);
-    	this.spinningList.add(sh3);
+		while (iterator1.hasNext()) {
+			JSONObject jo = iterator1.next();
+	    	SpeedLimit sl = new SpeedLimit((String)jo.get("messageGroup"), (String)jo.get("eventType"), ((Long) jo.get("speedLimit")).floatValue(), ((Long) jo.get("speedOver")).floatValue());
+	    	this.speedLimitList.add(sl);
+		}
+		
+		JSONArray collection2 = (JSONArray) obj.get("spinningEvents");
+		Iterator<JSONObject> iterator2 = collection2.iterator();
     	
-    	SpeedLimit sl1 = new SpeedLimit("9", "93", 60, (float)60.5);
-    	SpeedLimit sl2 = new SpeedLimit("9", "93", 60, 65);
-    	SpeedLimit sl3 = new SpeedLimit("9", "93", 60, 80);
-    	SpeedLimit sl4 = new SpeedLimit("9", "93", 60, 92);
-    	SpeedLimit sl5 = new SpeedLimit("9", "93", 60, 61);
-    	SpeedLimit sl6 = new SpeedLimit("9", "93", 60, 105);
-    	SpeedLimit sl7 = new SpeedLimit("9", "93", 60, 66);
-    	SpeedLimit sl8 = new SpeedLimit("9", "93", 60, 140);
-    	
-    	this.speedLimitList.add(sl1);
-    	this.speedLimitList.add(sl2);
-    	this.speedLimitList.add(sl3);
-    	this.speedLimitList.add(sl4);
-    	this.speedLimitList.add(sl5);
-    	this.speedLimitList.add(sl6);
-    	this.speedLimitList.add(sl7);
-    	this.speedLimitList.add(sl8);
-    	
-    	System.out.println(this.speedLimitList.size());
+		while (iterator2.hasNext()) {
+			JSONObject jo = iterator2.next();
+			SpinningHi sh = new SpinningHi((String)jo.get("messageGroup"), (String)jo.get("eventType"), (String)jo.get("datetimeTriggered"), (String)jo.get("datetimeTriggered"), (String)jo.get("datetimeTriggered"));
+	    	this.spinningList.add(sh);
+		}
     	
     }
 
@@ -518,7 +510,7 @@ public class Message {
 		this.partSpinningHiNotAllowed = partSpinningHi;
 	}
 
-	public int getDriverId() {
+	public String getDriverId() {
 		return driverId;
 	}
 
@@ -764,6 +756,10 @@ public class Message {
 	// traveled distance po velicini u km [ zero, testing, mid, average, hi ]
 	public int getTotalDistanceZeroKm() {
 		return totalDistanceZeroKm;
+	}
+	
+	public int getBoundaryTraveledDistanceKm() {
+		return boundaryTraveledDistanceKm;
 	}
 
 	public float getTestingTraveledDistance() {

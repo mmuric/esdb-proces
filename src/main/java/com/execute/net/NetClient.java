@@ -12,10 +12,10 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class NetClient {
 	
-	String host;
-	String route;
-	String public_key;
-	String private_key;
+	private String host;
+	private String route;
+	private String public_key;
+	private String private_key;
 	
 
 	public NetClient(String route) {
@@ -63,9 +63,10 @@ public class NetClient {
 		return json_str;
 	}
 	
+	
+	
 	private String encodeMessage(String message) {
 		
-		System.out.println(message);
 		String hmac = "";
 		try {
 			SecretKeySpec keySpec = new SecretKeySpec(this.private_key.getBytes(), "HmacMD5");
@@ -86,5 +87,14 @@ public class NetClient {
         }		
 		return hmac;
 	}
+
+	public String getRoute() {
+		return route;
+	}
+
+	public void setRoute(String route) {
+		this.route = route;
+	}
+	
 
 }
