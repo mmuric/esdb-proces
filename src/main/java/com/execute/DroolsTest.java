@@ -29,7 +29,6 @@ import sun.misc.IOUtils;
 
 import com.execute.net.NetClient;
 import com.execute.obj.Message;
-import com.thoughtworks.xstream.core.util.Base64Encoder;
 
 
 /**
@@ -46,23 +45,25 @@ public class DroolsTest {
         	NetClient rest = new NetClient("/api/model/driving-behaviour/method/get-all-clients");
         	String str_rest = rest.triggeredRest();
         	
-        	if(str_rest.isEmpty()) {
+        	JSONObject jsonObject = (JSONObject) parser.parse(str_rest); 
+        	JSONArray msg = (JSONArray) jsonObject.get("result");
+
+        	if(msg == null) {
         		throw new Exception("Nema klijenata pa nema ni reporta");
         	}
-        	
-        	JSONObject jsonObject = (JSONObject) parser.parse(str_rest); 
-        	
-        	JSONArray msg = (JSONArray) jsonObject.get("result");
+
     		Iterator<String> iterator = msg.iterator();
     		while (iterator.hasNext()) {
     			String client_id = iterator.next();
+    			System.out.println(client_id);
     			String route = "/api/model/driving-behaviour/method/get-all-event/id_client/" + client_id;
     			
     			// postavi novu rutu
     			rest.setRoute(route);
     			String result = rest.triggeredRest();
-    			if(result.isEmpty()) throw new Exception("no more messages");
+    			
     			JSONObject collection = (JSONObject) parser.parse(result);
+    			System.out.println(collection.get("result"));
     			JSONObject objs = (JSONObject) collection.get("result");
     			Iterator<JSONObject> iterator2 = objs.values().iterator();
     			
@@ -85,7 +86,7 @@ public class DroolsTest {
     	            // wizard.generatePDFReport(filename, true);
 
     	            String filename = "xml-report-" + message.getDriverId() + ".xml";
-    	            wizard.generateXMLReport(filename, false);
+    	            wizard.generateXMLReport(filename, true);
     	            
     	            
     	            route = "/api/model/driving-behaviour/method/save-results/id_client/" + client_id + "/driver/" + message.getDateFrom() + "/xml_file/" + executeCommand(filename); 
@@ -94,7 +95,7 @@ public class DroolsTest {
         			System.out.println(rest.triggeredRest());
         			
         			File file = new File(filename);
-        			file.delete();
+//        			file.delete();
         			
 //        			System.exit(0);
     			}    			

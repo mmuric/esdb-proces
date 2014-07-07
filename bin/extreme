@@ -1,0 +1,67 @@
+Head
+AccHi
+"Ukupan broj dogadjaja 'Harsh acceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Harsh acceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman." 
+
+AccMid
+"Ukupan broj dogadjaja 'Harsh acceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Harsh acceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+DecHi
+"Ukupan broj dogadjaja 'Harsh deceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Harsh deceleration severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+DecMid
+"Ukupan broj dogadjaja 'Harsh deceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Harsh deceleration severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+CorneringHi
+"Ukupan broj dogadjaja 'Cornering severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Cornering severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+CorneringMid
+"Ukupan broj dogadjaja 'Cornering severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Cornering severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+SpeedLimit
+"Ukupan broj dogadjaja 'Speed limit notification' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Speed limit notification' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+AbruptTurningHi
+"Ukupan broj dogadjaja 'Abrupt turning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Abrupt turning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+AggressiveLaneChangeHi
+"Ukupan broj dogadjaja 'Aggressive lane change severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Aggressive lane change severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+AggressiveLaneChangeMid
+"Ukupan broj dogadjaja 'Aggressive lane change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Aggressive lane change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+BarrierAvoidanceHi
+"Ukupan broj dogadjaja 'Barrier avoidance severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Barrier avoidance severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+BarrierAvoidanceMid
+"Ukupan broj dogadjaja 'Barrier avoidance severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Barrier avoidance severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+SkiddingHi
+"Ukupan broj dogadjaja 'Vehicle skidding severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana"
+
+"Ukupan broj dogadjaja 'Vehicle skidding severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman."
+
+
