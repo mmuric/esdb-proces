@@ -3,8 +3,11 @@
 	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="src" path="resources"/>
 	<classpathentry kind="src" path="src/main/resources"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="DROOLS/Drools"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/external-jars"/>	
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry exported="true" kind="con" path="DROOLS/Drools"/>
+	<classpathentry exported="true" kind="lib" path="library/dom4j-1.6.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="library/iText-2.1.7.jar"/>
+	<classpathentry exported="true" kind="lib" path="library/JEFFCode.jar"/>
+	<classpathentry exported="true" kind="lib" path="library/json-simple-1.1.1.jar"/>
 	<classpathentry kind="output" path="target"/>
 </classpath>

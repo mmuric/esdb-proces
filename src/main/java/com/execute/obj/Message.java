@@ -51,8 +51,7 @@ public class Message {
 	protected int boundaryTraveledDistanceKm;
 	protected int totalDistanceMidKm;
 	protected int totalDistanceAverageKm;
-	protected int totalDistanceHiKm;
-	// bonus poeni
+	protected int totalDistanceHiKm; 
 	protected int minBonusPoints;
 
 	// limit negativnih poena, broj maksimalno dozvoljenih eventova

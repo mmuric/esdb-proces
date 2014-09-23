@@ -20,8 +20,10 @@ rule "Rule 01 If there is no traveled distance there will be no report"
 	when
 		m : Message( totalTraveledDistance == 0, typeOfDriver == "none" )	
 	then
-		System.out.println("nema driver\t" + m.getDriverId());
-		wizard.addText("Rule 01 If there is no traveled distance there will be no report", null);
+		String[] params = new String[2];
+		params[0] = "Head";
+		params[1] = "unknown"; 
+		wizard.addTextStrategic(null, "Rule 01 If there is no traveled distance there will be no report", params, null);
 		m.setTypeOfDriver("unknown");
 		update(m);
 end
@@ -36,8 +38,11 @@ rule "Testing a vehicle and installed device"
 		Object [] content = new Object[2];
 		content[0] = df.format(m.getTotalTraveledDistance());
 		content[1] = m.getTotalEvents();
+		String[] params = new String[2];
+		params[0] = "Head";
+		params[1] = "test";
 		
-		wizard.addTextWarning("Testing a vehicle and installed device", content);
+		wizard.addTextWarning(null, "Testing a vehicle and installed device", params, content);
 		
 		ArrayList<Tuple> values = new ArrayList<Tuple>();
         values.add(new Tuple("Harsh acceleration", m.getNumHiAcc() + m.getNumMidAcc()));
@@ -63,7 +68,7 @@ end
 
 rule "Rule 02 There is no irregular behavior of the driver"
 	when
-		m : Message( totalTraveledDistance >= boundaryTraveledDistanceKm, totalEvents == 0, typeOfDriver == "none" )
+		m : Message( totalEvents == 0, totalTraveledDistance >= boundaryTraveledDistanceKm, typeOfDriver == "none" )
 	then
 		m.setPartSpeedLimit(0);
 		m.setPartSkiddingHi(0);
@@ -85,17 +90,17 @@ end
 // odredjivanje limita i negativnih poena
 rule "Rule 04 limit of negative score is 0"
 	when
-		m : Message( totalTraveledDistance >= boundaryTraveledDistanceKm, totalTraveledDistance <= totalDistanceMidKm, maxEvent == 0, typeOfDriver == "none" )
+		m : Message( totalEvents > 0, totalTraveledDistance < boundaryTraveledDistanceKm, maxEvent == 0, typeOfDriver == "none" )
 	then
-		m.setMaxEvent(1);
-		m.setLimit(1);
+		m.setMaxEvent(10);
+		m.setLimit(10);
 		update(m);
 		System.out.println("RULE 04 limit of negative score is " + m.getTotalTraveledDistance() + "\t" + m.getTotalEvents() + "\t" + m.getLimit());
 end
 
 rule "Rule 05 set number of events, per travel distance"
 	when
-		m : Message( totalTraveledDistance > totalDistanceMidKm, maxEvent == 0, typeOfDriver == "none" )
+		m : Message( totalEvents > 0, totalTraveledDistance > boundaryTraveledDistanceKm, maxEvent == 0, typeOfDriver == "none" )
 	then		
 		float distanceRount = m.getTotalTraveledDistance() / 1000;
 		int result = (int)  Math.ceil( distanceRount * m.getTotalEventPerKm() );
@@ -103,6 +108,15 @@ rule "Rule 05 set number of events, per travel distance"
 		System.out.println("RULE 05 Maximum number of event is\t" + result);
 		update(m);
 end  
+
+rule "Set limit of negative points for low traveled distance"				
+	when
+		m : Message( maxEvent > 0, limit == 0, totalTraveledDistance > boundaryTraveledDistanceKm, totalTraveledDistance <= totalDistanceMidKm, typeOfDriver == "none", maxEvent: maxEvent )
+	then	
+		System.out.println("RULE 06 Max number of event: " + m.getMaxEvent() );		
+		m.setLimit( maxEvent + 10 );
+		update(m);		
+end
 
 rule "Rule 06 set limit of negative points for traveled distance below than average"				
 	when
@@ -140,7 +154,7 @@ rule "Rule 09 set acceleration points for severity level medium if numMidAcc is 
 	then
 		m.setPartAccMid(0);
 		update(m);
-		//System.out.println( "Rule 09 no acc point for severity level midium: " + m.getPartAccMid() );
+		System.out.println( "Rule 09 no acc point for severity level midium: " + m.getPartAccMid() );
 end
 
 rule "Rule 10 set acceleration points for severity level medium if numMidAcc is greater than allowed"
@@ -152,7 +166,7 @@ rule "Rule 10 set acceleration points for severity level medium if numMidAcc is 
 		m.setPartAccMid(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Acc point for severity level midium: " + m.getPartAccMid() );		
+		System.out.println( "Acc point for severity level midium: " + m.getPartAccMid() );		
 end
 
 rule "Rule 11 set acceleration points for severity level high if numHiAcc is less than allowed"
@@ -161,7 +175,7 @@ rule "Rule 11 set acceleration points for severity level high if numHiAcc is les
 	then
 		m.setPartAccHi(0);
 		update(m);
-		//System.out.println( "Rule 11 no acc point for severity level hi: " + m.getPartAccHi() );
+		System.out.println( "Rule 11 no acc point for severity level hi: " + m.getPartAccHi() );
 end
 
 rule "Rule 12 set acceleration points for severity level high if numHiAcc is greater than allowed"
@@ -173,7 +187,7 @@ rule "Rule 12 set acceleration points for severity level high if numHiAcc is gre
 		m.setPartAccHi(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Acc point for severity level high: " + m.getPartAccHi() );		
+		System.out.println( "Acc point for severity level high: " + m.getPartAccHi() );		
 end
 
 rule "Rule 13 set deceleration points for severity level medium if numMidDec is less than allowed"
@@ -182,7 +196,7 @@ rule "Rule 13 set deceleration points for severity level medium if numMidDec is 
 	then
 		m.setPartDecMid(0);
 		update(m);
-		//System.out.println( "no dec point for severity level midium: " + m.getPartDecMid() );
+		System.out.println( "no dec point for severity level midium: " + m.getPartDecMid() );
 end
 
 rule "Rule 14 set deceleration points for severity level medium if numMidDec is greater than allowed"
@@ -194,7 +208,7 @@ rule "Rule 14 set deceleration points for severity level medium if numMidDec is 
 		m.setPartDecMid(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Dec point for severity level midium: " + m.getPartDecMid() );		
+		System.out.println( "Dec point for severity level midium: " + m.getPartDecMid() );		
 end
 
 rule "Rule 15 set deceleration points for severity level high if numHiDec is less than allowed"
@@ -203,7 +217,7 @@ rule "Rule 15 set deceleration points for severity level high if numHiDec is les
 	then
 		m.setPartDecHi(0);
 		update(m);
-		//System.out.println( "no dec point for severity level hi: " + m.getPartDecHi() );
+		System.out.println( "no dec point for severity level hi: " + m.getPartDecHi() );
 end
 
 rule "Rule 16 set deceleration points for severity level hi if numHiDec is greater than allowed"
@@ -215,7 +229,7 @@ rule "Rule 16 set deceleration points for severity level hi if numHiDec is great
 		m.setPartDecHi(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Dec point for severity level midium: " + m.getPartDecHi() );		
+		System.out.println( "Dec point for severity level midium: " + m.getPartDecHi() );		
 end
 
 rule "Rule 17 set harsh cornering points for severity level mid if numHiDec is less than allowed"
@@ -224,7 +238,7 @@ rule "Rule 17 set harsh cornering points for severity level mid if numHiDec is l
 	then
 		m.setPartCorneringMid(0);
 		update(m);
-		//System.out.println( "no harsh cornering point for severity level mid: " + m.getPartCorneringMid() );
+		System.out.println( "no harsh cornering point for severity level mid: " + m.getPartCorneringMid() );
 end
 
 rule "Rule 18 set harsh cornering points for severity level mid if numMidCornering is greater than allowed"
@@ -236,7 +250,7 @@ rule "Rule 18 set harsh cornering points for severity level mid if numMidCorneri
 		m.setPartCorneringMid(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Harsh cornering point for severity level midium: " + m.getPartCorneringMid() );		
+		System.out.println( "Harsh cornering point for severity level midium: " + m.getPartCorneringMid() );		
 end
 
 rule "Rule 19 set harsh cornering points for severity level hi if numHiDec is less than allowed"
@@ -245,7 +259,7 @@ rule "Rule 19 set harsh cornering points for severity level hi if numHiDec is le
 	then
 		m.setPartCorneringHi(0);
 		update(m);
-		//System.out.println( "no harsh cornering point for severity level hi: " + m.getPartCorneringMid() );
+		System.out.println( "no harsh cornering point for severity level hi: " + m.getPartCorneringMid() );
 end
 
 rule "Rule 20 set harsh cornering points for severity level hi if numHiDec is greater than allowed"
@@ -257,7 +271,7 @@ rule "Rule 20 set harsh cornering points for severity level hi if numHiDec is gr
 		m.setPartCorneringHi(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Harsh cornering point for severity level hi: " + m.getPartCorneringHi() );		
+		System.out.println( "Harsh cornering point for severity level hi: " + m.getPartCorneringHi() );		
 end
 
 rule "Rule 21 set vehicle skidding points if numHiSkidding is less than allowed"
@@ -266,7 +280,7 @@ rule "Rule 21 set vehicle skidding points if numHiSkidding is less than allowed"
 	then
 		m.setPartSkiddingHi(0);
 		update(m);
-		//System.out.println( "no vehicle skidding: " + m.getPartSkiddingHi() );
+		System.out.println( "no vehicle skidding: " + m.getPartSkiddingHi() );
 end
 
 rule "Rule 22 set vehicle skidding points if numHiSkidding is greater than allowed"
@@ -278,7 +292,7 @@ rule "Rule 22 set vehicle skidding points if numHiSkidding is greater than allow
 		m.setPartSkiddingHi(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Vehicle skidding: " + m.getPartSkiddingHi() );		
+		System.out.println( "Vehicle skidding: " + m.getPartSkiddingHi() );		
 end
 
 rule "Rule 23 set abrupt turning points if numHiAbruptTurning is less than allowed"
@@ -287,7 +301,7 @@ rule "Rule 23 set abrupt turning points if numHiAbruptTurning is less than allow
 	then
 		m.setPartAbruptTurningHi(0);
 		update(m);
-		//System.out.println( "No abrupt turning: " + m.getPartAbruptTurningHi() );
+		System.out.println( "No abrupt turning: " + m.getPartAbruptTurningHi() );
 end
 
 rule "Rule 24 set abrupt turning points if numHiAbruptTurning is greater than allowed"
@@ -299,7 +313,7 @@ rule "Rule 24 set abrupt turning points if numHiAbruptTurning is greater than al
 		m.setPartAbruptTurningHi(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Abrupt turning: " + m.getPartAbruptTurningHi() );		
+		System.out.println( "Abrupt turning: " + m.getPartAbruptTurningHi() );		
 end
 
 rule "Rule 25 set aggressive lane change points if numMidAggressiveLaneChange is less than allowed"
@@ -308,7 +322,7 @@ rule "Rule 25 set aggressive lane change points if numMidAggressiveLaneChange is
 	then
 		m.setPartAggressiveLaneChangeMid(0);
 		update(m);
-		//System.out.println( "no aggressive lane change severity 1: " + m.getPartAggressiveLaneChangeMid() );
+		System.out.println( "no aggressive lane change severity 1: " + m.getPartAggressiveLaneChangeMid() );
 end
 
 rule "Rule 26 set aggressive lane change points if numMidAggressiveLaneChange is greater than allowed"
@@ -320,7 +334,7 @@ rule "Rule 26 set aggressive lane change points if numMidAggressiveLaneChange is
 		m.setPartAggressiveLaneChangeMid(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Aggressive lane change for severity 1: " + m.getPartAggressiveLaneChangeMid() );		
+		System.out.println( "Aggressive lane change for severity 1: " + m.getPartAggressiveLaneChangeMid() );		
 end
 
 rule "Rule 27 set aggressive lane change points if numHiAggressiveLaneChange is less than allowed"
@@ -329,7 +343,7 @@ rule "Rule 27 set aggressive lane change points if numHiAggressiveLaneChange is 
 	then
 		m.setPartAggressiveLaneChangeHi(0);
 		update(m);
-		//System.out.println( "no aggressive lane change severity 2: " + m.getPartAggressiveLaneChangeHi() );
+		System.out.println( "no aggressive lane change severity 2: " + m.getPartAggressiveLaneChangeHi() );
 end
 
 rule "Rule 28 set aggressive lane change points if numHiAggressiveLaneChange is greater than allowed"
@@ -341,7 +355,7 @@ rule "Rule 28 set aggressive lane change points if numHiAggressiveLaneChange is 
 		m.setPartAggressiveLaneChangeHi(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Aggressive lane change for severity 2: " + m.getPartAggressiveLaneChangeHi() );		
+		System.out.println( "Aggressive lane change for severity 2: " + m.getPartAggressiveLaneChangeHi() );		
 end
 
 rule "Rule 29 set barrier avoidance points if numMidBarrierAvoidance is less than allowed"
@@ -350,7 +364,7 @@ rule "Rule 29 set barrier avoidance points if numMidBarrierAvoidance is less tha
 	then
 		m.setPartBarrierAvoidanceMid(0);
 		update(m);
-		//System.out.println( "no barrier avoidance severity 1: " + m.getPartBarrierAvoidanceMid() );
+		System.out.println( "no barrier avoidance severity 1: " + m.getPartBarrierAvoidanceMid() );
 end
 
 rule "Rule 30 set barrier avoidance points if numMidBarrierAvoidance is greater than allowed"
@@ -362,7 +376,7 @@ rule "Rule 30 set barrier avoidance points if numMidBarrierAvoidance is greater 
 		m.setPartBarrierAvoidanceMid(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Barrier avoidance for severity 1: " + m.getPartBarrierAvoidanceMid() );		
+		System.out.println( "Barrier avoidance for severity 1: " + m.getPartBarrierAvoidanceMid() );		
 end
 
 rule "Rule 31 set barrier avoidance points if numHiBarrierAvoidance is less than allowed"
@@ -371,7 +385,7 @@ rule "Rule 31 set barrier avoidance points if numHiBarrierAvoidance is less than
 	then
 		m.setPartBarrierAvoidanceHi(0);
 		update(m);
-		//System.out.println( "no barrier avoidance severity 2: " + m.getPartBarrierAvoidanceHi() );
+		System.out.println( "no barrier avoidance severity 2: " + m.getPartBarrierAvoidanceHi() );
 end
 
 rule "Rule 32 set barrier avoidance points if numHiBarrierAvoidance is greater than allowed"
@@ -383,7 +397,7 @@ rule "Rule 32 set barrier avoidance points if numHiBarrierAvoidance is greater t
 		m.setPartBarrierAvoidanceHi(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
-		//System.out.println( "Barrier avoidance for severity 2: " + m.getPartBarrierAvoidanceHi() );		
+		System.out.println( "Barrier avoidance for severity 2: " + m.getPartBarrierAvoidanceHi() );		
 end
 
 rule "Rule 33 check if spinning is allowed"
@@ -402,7 +416,7 @@ rule "Rule 33 check if spinning is allowed"
 			}			
 		}
 		
-		//System.out.println("dozvoljeno " +count);
+		System.out.println("dozvoljeno " +count);
 
 		m.setNumHiSpinningAllowed(count);
 		update(m);
@@ -424,7 +438,7 @@ rule "Rule 33 check if spinning is not allowed"
 			}			
 		}
 
-		//System.out.println("nije dozvoljeno " +count);
+		System.out.println("nije dozvoljeno " +count);
 
 		m.setNumHiSpinningNotAllowed(count);
 		update(m);
@@ -435,7 +449,7 @@ rule "Rule 34 set points for allowed spinning if is less than allowed"
 		m: Message( (float)(numHiSpinningAllowed/totalTraveledDistance) <= (float)(eventPerKmSpinningHiInWinter/kmBase), partSpinningHiAllowed == Integer.MIN_VALUE, numHiSpinningAllowed: numHiSpinningAllowed, eventPerKmSpinningHiInWinter: eventPerKmSpinningHiInWinter )
 	then
 		int points = 0;		
-		//System.out.println("negativni poeni za spinove koji su dozvoljeni a manji su od granicnih: " + points);			
+		System.out.println("negativni poeni za spinove koji su dozvoljeni a manji su od granicnih: " + points);			
 		m.setPartSpinningHiAllowed(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);	
@@ -448,7 +462,7 @@ rule "Rule 36 set points for allowed spinning if is greater than allowed"
 		float n = ((numHiSpinningAllowed-eventPerKmSpinningHiInWinter)/eventPerKmSpinningHiInWinter) * 100;
 		int points = (int)  Math.ceil(numHiSpinningAllowed + n);
 		
-		//System.out.println("negativni poeni za spinove koji su dozvoljeni " + points);
+		System.out.println("negativni poeni za spinove koji su dozvoljeni " + points);
 			
 		m.setPartSpinningHiAllowed(points);
 		m.setTotal(m.getTotal() + points);
@@ -459,7 +473,7 @@ rule "Rule 37 set points for spinning if is less than allowed"
 	when
 		m: Message( (float)(numHiSpinningNotAllowed/totalTraveledDistance) <= (float)(eventPerKmSpinningHi/kmBase), partSpinningHiNotAllowed == Integer.MIN_VALUE, numEvent: numHiSpinningNotAllowed )
 	then
-	//	System.out.println("Nema spina " + 0);
+		System.out.println("Nema spina " + 0);
 		m.setPartSpinningHiNotAllowed(0);
 		update(m);
 end
@@ -468,10 +482,10 @@ rule "Rule 38 set points for spinning if is greater than allowed"
 	when
 		m: Message( (float)(numHiSpinningNotAllowed/totalTraveledDistance) > (float)(eventPerKmSpinningHi/kmBase), partSpinningHiNotAllowed == Integer.MIN_VALUE, numEvent: numHiSpinningNotAllowed )
 	then
-		//System.out.println("Ukupno spinova " + numEvent);
+		System.out.println("Ukupno spinova " + numEvent);
 		m.setPartSpinningHiNotAllowed(m.getLimit() + numEvent);
 		m.setTotal(m.getTotal() + m.getPartSpinningHiNotAllowed());
-		m.setTypeOfDriver("extreme");
+		m.setTypeOfDriver("extreme_speen");
 		update(m);
 end
 
@@ -481,7 +495,7 @@ rule "Rule 39 set speed limit points if numSpeedLimit is less than allowed"
 	then
 		m.setPartSpeedLimit(0);
 		update(m);
-		//System.out.println( "Ovo je speed limit: " + m.getPartBarrierAvoidanceHi() );
+		System.out.println( "Ovo je speed limit: " + m.getPartBarrierAvoidanceHi() );
 end
 
 rule "Rule 40 set negative points for speed limit"
@@ -499,13 +513,14 @@ rule "Rule 40 set negative points for speed limit"
 			i++;
 		}
 		
-		//System.out.println("Negativni bodovi za speed limit " + points);
+		System.out.println("Negativni bodovi za speed limit " + points);
 		
 		m.setPartSpeedLimit(points);
 		m.setTotal(m.getTotal() + points);
 		update(m);
 end
 
+/*
 rule "debug rule"
 	when 
 		m: Message( typeOfDriver == "none" )
@@ -518,6 +533,7 @@ rule "debug rule"
 		System.out.println("Limit:\t" + m.getLimit());
 		System.out.println("---------------");
 end
+*/
 
 rule "Set unknown type because we do not have enough data to determine driver behaviour"
 	when 
@@ -526,23 +542,11 @@ rule "Set unknown type because we do not have enough data to determine driver be
 		Object [] content = new Object[2];
 		content[0] = m.getTotalTraveledDistance();
 		content[1] = total;
-		
-		wizard.addTextVeryPositive("Set unknown type because we do not have enough data to determine driver behaviour", content);		
-		m.setTypeOfDriver("unknown");
-		update(m);	
-end
-
-rule "Set status excellent for driver that have total score equal to zero"
-	when 
-		m: Message( typeOfDriver in ("none", "exelent"), totalTraveledDistance > boundaryTraveledDistanceKm, total == 0, limit: limit, events: totalEvents )
-	then
-		Object [] content = new Object[4];
-		content[0] = m.getTotalTraveledDistance();
-		content[1] = m.getTotalTraveledDistance() - m.getBoundaryTraveledDistanceKm();
-		content[2] = limit;
-		content[3] = events;
-			
-		wizard.addTextVeryPositive("Set status excellent for driver that have total score equal to zero", content);	
+		String[] params = new String[2];
+		params[0] = "Head";
+		params[1] = "unknown";
+		System.out.println("Set unknown type because we do not have enough data to determine driver behaviour");
+		wizard.addTextStrategic(null, "Set unknown type because we do not have enough data to determine driver behaviour", params, content);	
 		
 		ArrayList<Tuple> values = new ArrayList<Tuple>();
         values.add(new Tuple("Harsh acceleration", m.getNumHiAcc() + m.getNumMidAcc()));
@@ -556,13 +560,55 @@ rule "Set status excellent for driver that have total score equal to zero"
 		
 		
 		
+		wizard.addData("Set unknown type because we do not have enough data to determine driver behaviour", new TwoDimData(
+			new Dimension("Naziv dogadaja"),
+			new Dimension("Ukupno"),
+			values
+		));
+		
+			
+		m.setTypeOfDriver("unknown");
+		update(m);	
+end
+
+rule "Set status excellent for driver that have total score equal to zero"
+	when 
+		m: Message( typeOfDriver in ("none", "exelent"), totalTraveledDistance > boundaryTraveledDistanceKm, total == 0, limit: limit, events: totalEvents )
+	then
+		System.out.println("Set status excellent for driver that have total score equal to zero");
+		Object [] content = new Object[5];
+		content[0] = m.getTotalTraveledDistance();
+		content[1] = m.getTotalTraveledDistance() - m.getBoundaryTraveledDistanceKm();
+		content[2] = limit;
+		content[3] = events;
+		
+		String[] params = new String[2];
+		params[0] = "Head";
+		params[1] = "excellent";	
+			
+		// wizard.addTextVeryPositive("Set status excellent for driver that have total score equal to zero", content);	
+		wizard.addTextVeryPositive(null, "Set status excellent for driver that have total score equal to zero", params, content);
+
+		ArrayList<Tuple> values = new ArrayList<Tuple>();
+        values.add(new Tuple("Harsh acceleration", m.getNumHiAcc() + m.getNumMidAcc()));
+        values.add(new Tuple("Harsh deceleration", m.getNumHiDec() + m.getNumMidDec()));
+        values.add(new Tuple("High speed cornering", m.getNumHiCornering() + m.getNumMidCornering()));
+        values.add(new Tuple("Vehicle skidding", m.getNumHiSkidding()));
+        values.add(new Tuple("Vehicle abrupt turning", m.getNumHiAbruptTurning()));
+        values.add(new Tuple("Abrupt lane changing", m.getNumHiAggressiveLaneChange() + m.getNumMidAggressiveLaneChange()));
+        values.add(new Tuple("Barrier avoidance", m.getNumHiBarrierAvoidance() + m.getNumMidBarrierAvoidance()));
+        values.add(new Tuple("Speed limit", m.getNumSpeedLimit()));
+		
+		
+		
 		wizard.addData("Set status excellent for driver that have total score equal to zero", new TwoDimData(
-			new Dimension("Naziv prekrsaja"),
+			new Dimension("Naziv dogadaja"),
 			new Dimension("Ukupno"),
 			values
 		));
 			
-		m.setTypeOfDriver("excellent");		
+		m.setTypeOfDriver("excellent");	
+			
 		update(m);
 end
 
@@ -570,6 +616,7 @@ rule "Rule 45 Set ok status for driver"
 	when 
 		m: Message( typeOfDriver == "none", total < limit, ((total/ limit) *100) <= 20, total: total, limit: limit, result: ((total/limit) *100) )
 	then
+		System.out.println("Rule 45 Set ok status for driver");
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
 		Object [] content = new Object[4];
@@ -577,8 +624,31 @@ rule "Rule 45 Set ok status for driver"
 		content[1] = limit;
 		content[2] = total; 
 		content[3] = df.format(result); 
+		String[] params = new String[2];
+		params[0] = "Head";
+		params[1] = "ok";
 		
-		wizard.addTextVeryPositive("Rule 45 Set ok status for driver", content);		
+		// wizard.addTextVeryPositive("Rule 45 Set ok status for driver", content);	
+		wizard.addTextVeryPositive(null, "Rule 45 Set ok status for driver", params, content);	
+		
+		ArrayList<Tuple> values = new ArrayList<Tuple>();
+        values.add(new Tuple("Harsh acceleration", m.getNumHiAcc() + m.getNumMidAcc()));
+        values.add(new Tuple("Harsh deceleration", m.getNumHiDec() + m.getNumMidDec()));
+        values.add(new Tuple("High speed cornering", m.getNumHiCornering() + m.getNumMidCornering()));
+        values.add(new Tuple("Vehicle skidding", m.getNumHiSkidding()));
+        values.add(new Tuple("Vehicle abrupt turning", m.getNumHiAbruptTurning()));
+        values.add(new Tuple("Abrupt lane changing", m.getNumHiAggressiveLaneChange() + m.getNumMidAggressiveLaneChange()));
+        values.add(new Tuple("Barrier avoidance", m.getNumHiBarrierAvoidance() + m.getNumMidBarrierAvoidance()));
+        values.add(new Tuple("Speed limit", m.getNumSpeedLimit()));
+		
+		
+		
+		wizard.addData("Rule 45 Set ok status for driver", new TwoDimData(
+			new Dimension("Naziv dogadaja"),
+			new Dimension("Ukupno"),
+			values
+		));
+		
 		m.setTypeOfDriver("ok");
 		update(m);		
 end
@@ -587,6 +657,7 @@ rule "Rule 46 Set border status for driver"
 	when
 		m: Message( typeOfDriver == "none", total < limit, ((total/ limit) *100) > 20, ((total/ limit) *100) <= 40, total: total, limit: limit, result: ((total/limit) *100) )
 	then
+		System.out.println("Rule 46 Set border status for driver");
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
 		Object [] content = new Object[4];
@@ -594,8 +665,31 @@ rule "Rule 46 Set border status for driver"
 		content[1] = limit;
 		content[2] = total; 
 		content[3] = df.format(result); 
+		String[] params = new String[2];
+		params[0] = "Head";
+		params[1] = "border";
 		
-		wizard.addText("Rule 46 Set border status for driver", content);
+		//wizard.addText("Rule 46 Set border status for driver", content);
+		wizard.addText(null, "Rule 46 Set border status for driver", params, content);
+		
+		ArrayList<Tuple> values = new ArrayList<Tuple>();
+        values.add(new Tuple("Harsh acceleration", m.getNumHiAcc() + m.getNumMidAcc()));
+        values.add(new Tuple("Harsh deceleration", m.getNumHiDec() + m.getNumMidDec()));
+        values.add(new Tuple("High speed cornering", m.getNumHiCornering() + m.getNumMidCornering()));
+        values.add(new Tuple("Vehicle skidding", m.getNumHiSkidding()));
+        values.add(new Tuple("Vehicle abrupt turning", m.getNumHiAbruptTurning()));
+        values.add(new Tuple("Abrupt lane changing", m.getNumHiAggressiveLaneChange() + m.getNumMidAggressiveLaneChange()));
+        values.add(new Tuple("Barrier avoidance", m.getNumHiBarrierAvoidance() + m.getNumMidBarrierAvoidance()));
+        values.add(new Tuple("Speed limit", m.getNumSpeedLimit()));
+		
+		
+		
+		wizard.addData("Rule 46 Set border status for driver", new TwoDimData(
+			new Dimension("Naziv dogadaja"),
+			new Dimension("Ukupno"),
+			values
+		));
+		
 		m.setTypeOfDriver("border");
 		update(m);
 end
@@ -604,6 +698,7 @@ rule "Rule 47 Set risk status for driver"
 	when
 		m: Message( typeOfDriver == "none", total < limit, ((total/ limit) *100) > 40, ((total/ limit) *100) <= 70, total: total, limit: limit, result: ((total/limit) *100) )
 	then
+		System.out.println("Rule 47 Set risk status for driver");
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
 		Object [] content = new Object[4];
@@ -611,8 +706,31 @@ rule "Rule 47 Set risk status for driver"
 		content[1] = limit;
 		content[2] = total; 
 		content[3] = df.format(result); 
+		String[] params = new String[2];
+		params[0] = "Head";
+		params[1] = "risk"; 
 		
-		wizard.addTextWarning("Rule 47 Set risk status for driver", content);
+		// wizard.addTextWarning("Rule 47 Set risk status for driver", content);
+		wizard.addTextWarning(null, "Rule 47 Set risk status for driver", params, content);
+		
+		ArrayList<Tuple> values = new ArrayList<Tuple>();
+        values.add(new Tuple("Harsh acceleration", m.getNumHiAcc() + m.getNumMidAcc()));
+        values.add(new Tuple("Harsh deceleration", m.getNumHiDec() + m.getNumMidDec()));
+        values.add(new Tuple("High speed cornering", m.getNumHiCornering() + m.getNumMidCornering()));
+        values.add(new Tuple("Vehicle skidding", m.getNumHiSkidding()));
+        values.add(new Tuple("Vehicle abrupt turning", m.getNumHiAbruptTurning()));
+        values.add(new Tuple("Abrupt lane changing", m.getNumHiAggressiveLaneChange() + m.getNumMidAggressiveLaneChange()));
+        values.add(new Tuple("Barrier avoidance", m.getNumHiBarrierAvoidance() + m.getNumMidBarrierAvoidance()));
+        values.add(new Tuple("Speed limit", m.getNumSpeedLimit()));
+		
+		
+		
+		wizard.addData("Rule 47 Set risk status for driver", new TwoDimData(
+			new Dimension("Naziv dogadaja"),
+			new Dimension("Ukupno"),
+			values
+		));
+		
 		m.setTypeOfDriver("risk");
 		update(m);
 end
@@ -621,6 +739,7 @@ rule "Rule 48 Set agresive status for driver"
 	when
 		m: Message(typeOfDriver == "none", total < limit, ((total/ limit) *100) > 70, ((total/ limit) *100) <= 100, total: total, limit: limit, result: ((total/ limit) *100) )
 	then
+		System.out.println("Rule 48 Set agresive status for driver");
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
 		Object [] content = new Object[4];
@@ -628,16 +747,40 @@ rule "Rule 48 Set agresive status for driver"
 		content[1] = limit;
 		content[2] = total; 
 		content[3] = df.format(result);
+		String[] params = new String[2];
+		params[0] = "Head";
+		params[1] = "agresive"; 
 				
-		wizard.addTextNegative("Rule 48 Set agresive status for driver", content);
+		// wizard.addTextNegative("Rule 48 Set agresive status for driver", content);
+		wizard.addTextNegative(null, "Rule 48 Set agresive status for driver", params, content);
+		
+		ArrayList<Tuple> values = new ArrayList<Tuple>();
+        values.add(new Tuple("Harsh acceleration", m.getNumHiAcc() + m.getNumMidAcc()));
+        values.add(new Tuple("Harsh deceleration", m.getNumHiDec() + m.getNumMidDec()));
+        values.add(new Tuple("High speed cornering", m.getNumHiCornering() + m.getNumMidCornering()));
+        values.add(new Tuple("Vehicle skidding", m.getNumHiSkidding()));
+        values.add(new Tuple("Vehicle abrupt turning", m.getNumHiAbruptTurning()));
+        values.add(new Tuple("Abrupt lane changing", m.getNumHiAggressiveLaneChange() + m.getNumMidAggressiveLaneChange()));
+        values.add(new Tuple("Barrier avoidance", m.getNumHiBarrierAvoidance() + m.getNumMidBarrierAvoidance()));
+        values.add(new Tuple("Speed limit", m.getNumSpeedLimit()));
+		
+		
+		
+		wizard.addData("Rule 48 Set agresive status for driver", new TwoDimData(
+			new Dimension("Naziv dogadaja"),
+			new Dimension("Ukupno"),
+			values
+		));
+		
 		m.setTypeOfDriver("agresive");
 		update(m);
 end
 	
 rule "Rule 49 Set extreme status for driver"
 	when
-		m: Message( typeOfDriver == "none", total > limit, total: total, limit: limit, result: (((total - limit)/ limit) *100) )
+		m: Message( typeOfDriver in ("none", "extreme_speen"), total > limit, total: total, limit: limit, result: (((total - limit)/ limit) *100) )
 	then
+		System.out.println("Rule 49 Set extreme status for driver");
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);		
 		Object [] content = new Object[4];
@@ -645,8 +788,31 @@ rule "Rule 49 Set extreme status for driver"
 		content[1] = limit;
 		content[2] = total; 
 		content[3] = df.format(result);
+		String[] params = new String[2];
+		params[0] = "Head";
+		params[1] = "extreme"; 
+
+		// wizard.addTextVeryNegative("Rule 49 Set extreme status for driver", content);
+		wizard.addTextVeryNegative(null, "Rule 49 Set extreme status for driver", params, content);
 		
-		wizard.addTextVeryNegative("Rule 49 Set extreme status for driver", content);
+		ArrayList<Tuple> values = new ArrayList<Tuple>();
+        values.add(new Tuple("Harsh acceleration", m.getNumHiAcc() + m.getNumMidAcc()));
+        values.add(new Tuple("Harsh deceleration", m.getNumHiDec() + m.getNumMidDec()));
+        values.add(new Tuple("High speed cornering", m.getNumHiCornering() + m.getNumMidCornering()));
+        values.add(new Tuple("Vehicle skidding", m.getNumHiSkidding()));
+        values.add(new Tuple("Vehicle abrupt turning", m.getNumHiAbruptTurning()));
+        values.add(new Tuple("Abrupt lane changing", m.getNumHiAggressiveLaneChange() + m.getNumMidAggressiveLaneChange()));
+        values.add(new Tuple("Barrier avoidance", m.getNumHiBarrierAvoidance() + m.getNumMidBarrierAvoidance()));
+        values.add(new Tuple("Speed limit", m.getNumSpeedLimit()));
+		
+		
+		
+		wizard.addData("Rule 49 Set extreme status for driver", new TwoDimData(
+			new Dimension("Naziv dogadaja"),
+			new Dimension("Ukupno"),
+			values
+		));
+		
 		m.setTypeOfDriver("extreme");
 		update(m);
 end
@@ -662,7 +828,7 @@ rule "Rule 50 Postavi eventOfLowerImportance"
 		content[0] = (int) totalLowImportance;
 		System.out.println("niska znacajnost " + lowImportance + " ukupno " + totalLowImportance  + " limit: " +limit);
 		
-		wizard.addText("Rule 50 Postavi eventOfLowerImportance", content);
+		// wizard.addText("Rule 50 Postavi eventOfLowerImportance", content);
 		m.setEventOfLowerImportance((float)lowImportance);
 		update(m);
 end
@@ -677,7 +843,7 @@ rule "Rule 51 Postavi eventOfHighImportance"
 		content[0] = (int) totalHiImportance;
 		System.out.println("visoka znacajnost " + highImportance + " ukupno " + totalHiImportance + " limit: " +limit);
 		
-		wizard.addText("Rule 51 Postavi eventOfHighImportance", content);
+		// wizard.addText("Rule 51 Postavi eventOfHighImportance", content);
 		m.setEventOfHighImportance(highImportance);
 		update(m);
 end
@@ -758,7 +924,7 @@ end
 
 rule "Rule 54 Set text for AccHi for ok driver behavior"
 	when
-		m: Message( typeOfDriver == "ok" , partAccHi/total > eventOfLowerImportance, processedAccHi == "No" )
+		m: Message( typeOfDriver == "ok" , partAccHi > 0, processedAccHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -775,7 +941,7 @@ end
 
 rule "Rule 55 Set text for AccMid for ok driver behavior"
 	when
-		m: Message( typeOfDriver == "ok" , partAccMid/total > eventOfLowerImportance, processedAccMid == "No" )
+		m: Message( typeOfDriver == "ok" , partAccMid > 0, processedAccMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -792,7 +958,7 @@ end
 
 rule "Rule 56 Set text for DecHi for ok driver behavior"
 	when
-		m: Message( typeOfDriver == "ok" , partDecHi/total > eventOfLowerImportance, processedDecHi == "No" )
+		m: Message( typeOfDriver == "ok" , partDecHi > 0, processedDecHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -809,7 +975,7 @@ end
 
 rule "Rule 57 Set text for DecMid for ok driver behavior"
 	when
-		m: Message( typeOfDriver == "ok" , partDecMid/total > eventOfLowerImportance, processedDecMid == "No" )
+		m: Message( typeOfDriver == "ok" , partDecMid > 0, processedDecMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -826,7 +992,7 @@ end
 
 rule "Rule 58 Set text for CorneringHi for ok driver behavior"
 	when
-		m: Message( typeOfDriver == "ok" , partCorneringHi/total > eventOfLowerImportance, processedCorneringHi == "No" )
+		m: Message( typeOfDriver == "ok" , partCorneringHi > 0, processedCorneringHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -843,7 +1009,7 @@ end
 
 rule "Rule 59 Set text for CorneringMid for ok driver behavior"
 	when
-		m: Message( typeOfDriver == "ok" , partCorneringMid/total > eventOfLowerImportance, processedCorneringMid == "No" )
+		m: Message( typeOfDriver == "ok" , partCorneringMid > 0, processedCorneringMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -860,7 +1026,7 @@ end
 
 rule "Rule 60 Set text for Speed limit for ok driver behavior"
 	when
-		m: Message( typeOfDriver == "ok" , partSpeedLimit/total > eventOfLowerImportance, processedSpeedLimit == "No" )
+		m: Message( typeOfDriver == "ok" , partSpeedLimit > 0, processedSpeedLimit == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -877,7 +1043,7 @@ end
 
 rule "Rule 61 Set text for AbruptTurningHi for ok driver behavior"
 	when
-		m: Message( typeOfDriver == "ok", partAbruptTurningHi/total > eventOfHighImportance, processedAbruptTurningHi == "No" )
+		m: Message( typeOfDriver == "ok", partAbruptTurningHi > 0, processedAbruptTurningHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -894,7 +1060,7 @@ end
 
 rule "Rule 62 Set text for AggressiveLaneChangeHi for ok driver behaviour"
 	when
-		m: Message( typeOfDriver == "ok", partAggressiveLaneChangeHi/total > eventOfHighImportance, processedAggressiveLaneChangeHi == "No" )
+		m: Message( typeOfDriver == "ok", partAggressiveLaneChangeHi > 0, processedAggressiveLaneChangeHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -911,7 +1077,7 @@ end
 
 rule "Rule 63 Set text for AggressiveLaneChangeMid for ok driver behaviour"
 	when
-		m: Message( typeOfDriver == "ok", partAggressiveLaneChangeMid/total > eventOfHighImportance, processedAggressiveLaneChangeMid == "No" )
+		m: Message( typeOfDriver == "ok", partAggressiveLaneChangeMid > 0, processedAggressiveLaneChangeMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -928,7 +1094,7 @@ end
 
 rule "Rule 64 Set text for BarrierAvoidanceHi for ok driver behaviour"
 	when
-		m: Message( typeOfDriver == "ok", partBarrierAvoidanceHi/total > eventOfHighImportance, processedBarrierAvoidanceHi == "No" )
+		m: Message( typeOfDriver == "ok", partBarrierAvoidanceHi > 0, processedBarrierAvoidanceHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -936,7 +1102,6 @@ rule "Rule 64 Set text for BarrierAvoidanceHi for ok driver behaviour"
 		content[0] = m.getNumHiBarrierAvoidance();
 		content[1] = m.getPartBarrierAvoidanceHi();
 		content[2] = df.format((m.getPartAbruptTurningHi() / m.getLimit())*100);
-		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
 		
 		wizard.addTextWarning("Rule 64 Set text for BarrierAvoidanceHi for ok driver behaviour", content);
 		m.setProcessedBarrierAvoidanceHi("Yes");
@@ -945,7 +1110,7 @@ end
 
 rule "Rule 65 Set text for BarrierAvoidanceMid for ok driver behaviour"
 	when
-		m: Message( typeOfDriver == "ok", partBarrierAvoidanceMid/total > eventOfHighImportance, processedBarrierAvoidanceMid == "No" )
+		m: Message( typeOfDriver == "ok", partBarrierAvoidanceMid > 0, processedBarrierAvoidanceMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -953,7 +1118,6 @@ rule "Rule 65 Set text for BarrierAvoidanceMid for ok driver behaviour"
 		content[0] = m.getNumMidBarrierAvoidance();
 		content[1] = m.getPartBarrierAvoidanceMid();
 		content[2] = df.format((m.getPartBarrierAvoidanceMid() / m.getLimit())*100);
-		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance change severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%. Ovaj dogadjaj ucestvuje relativno malo u ukupnom limitu, Ali ipak treba skrenuti paznju vozacu kako nebi znacajno presao dozvoljeni limit.");
 		
 		wizard.addTextWarning("Rule 65 Set text for BarrierAvoidanceMid for ok driver behaviour", content);
 		m.setProcessedBarrierAvoidanceHi("Yes");
@@ -962,7 +1126,7 @@ end
 
 rule "Rule 66 Set text for SkiddingHi for ok driver behaviour"
 	when
-		m: Message( typeOfDriver == "ok", partSkiddingHi/total > eventOfHighImportance, processedSkiddingHi == "No" )
+		m: Message( typeOfDriver == "ok", partSkiddingHi > 0, processedSkiddingHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -979,7 +1143,7 @@ end
 
 rule "Rule 67 Set text for AccHi for bad driver behavior"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive") , partAccHi/total > eventOfLowerImportance, processedAccHi == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive") , partAccHi > 0, processedAccHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -997,7 +1161,7 @@ end
 
 rule "Rule 68 Set text for AccMid for bad driver behavior"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive") , partAccMid/total > eventOfLowerImportance, processedAccMid == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive") , partAccMid > 0, processedAccMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1015,7 +1179,7 @@ end
 
 rule "Rule 69 Set text for DecHi for bad driver behavior"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive") , partDecHi/total > eventOfLowerImportance, processedDecHi == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive") , partDecHi > 0, processedDecHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1033,7 +1197,7 @@ end
 
 rule "Rule 70 Set text for DecMid for bad driver behavior"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive") , partDecMid/total > eventOfLowerImportance, processedDecMid == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive") , partDecMid > 0, processedDecMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1051,7 +1215,7 @@ end
 
 rule "Rule 71 Set text for CorneringHi for bad driver behavior"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive") , partCorneringHi/total > eventOfLowerImportance, processedCorneringHi == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive") , partCorneringHi > 0, processedCorneringHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1060,7 +1224,6 @@ rule "Rule 71 Set text for CorneringHi for bad driver behavior"
 		content[1] = m.getPartCorneringHi();
 		content[2] = df.format((m.getPartCorneringHi() / m.getLimit())*100);
 		content[3] = m.getNumHiCornering() - m.getEventPerKmCorneringHi();
-		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Kako bi popravio svoje ponasanje vozac mora smanjiti agresivnost prilikom ulazenja u krivinu za: " + content[3] + " dogadjaja.");
 		
 		wizard.addText("Rule 71 Set text for CorneringHi for bad driver behavior", content);
 		m.setProcessedCorneringHi("Yes");
@@ -1069,7 +1232,7 @@ end
 
 rule "Rule 72 Set text for CorneringMid for bad driver behavior"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive") , partCorneringMid/total > eventOfLowerImportance, processedCorneringMid == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive") , partCorneringMid > 0, processedCorneringMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1078,7 +1241,6 @@ rule "Rule 72 Set text for CorneringMid for bad driver behavior"
 		content[1] = m.getPartCorneringMid();
 		content[2] = df.format((m.getPartCorneringMid() / m.getLimit())*100);
 		content[3] = m.getNumMidCornering() - m.getEventPerKmCorneringMid();
-		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Ovi negativni bodovi ukupno ucestvuju u dozvoljenom limitu sa " + content[2] + "%.  Kako bi popravio svoje ponasanje vozac mora smanjiti nagle ulaske u krivinu za: " + content[3] + " dogadjaja.");
 		
 		wizard.addText("Rule 72 Set text for CorneringMid for bad driver behavior", content);
 		m.setProcessedCorneringMid("Yes");
@@ -1087,7 +1249,7 @@ end
 
 rule "Rule 73 Set text for Speed limit for bad driver behavior"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive") , partSpeedLimit/total > eventOfLowerImportance, processedSpeedLimit == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive") , partSpeedLimit > 0, processedSpeedLimit == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1105,7 +1267,7 @@ end
 
 rule "Rule 74 Set text for AbruptTurningHi if driver is agresive"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive"), partAbruptTurningHi/total > eventOfHighImportance, processedAbruptTurningHi == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive"), partAbruptTurningHi > 0, processedAbruptTurningHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1123,7 +1285,7 @@ end
 
 rule "Rule 75 Set text for AggressiveLaneChangeHi if driver is agresive"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive"), partAggressiveLaneChangeHi/total > eventOfHighImportance, processedAggressiveLaneChangeHi == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive"), partAggressiveLaneChangeHi > 0, processedAggressiveLaneChangeHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1141,7 +1303,7 @@ end
 
 rule "Rule 76 Set text for AggressiveLaneChangeMid if driver is agresive"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive"), partAggressiveLaneChangeMid/total > eventOfHighImportance, processedAggressiveLaneChangeMid == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive"), partAggressiveLaneChangeMid > 0, processedAggressiveLaneChangeMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1159,7 +1321,7 @@ end
 
 rule "Rule 77 Set text for BarrierAvoidanceHi if driver is agresive"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive"), partBarrierAvoidanceHi/total > eventOfHighImportance, processedBarrierAvoidanceHi == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive"), partBarrierAvoidanceHi > 0, processedBarrierAvoidanceHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1177,7 +1339,7 @@ end
 
 rule "Rule 78 Set text for BarrierAvoidanceMid if driver is agresive"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive"), partBarrierAvoidanceMid/total > eventOfHighImportance, processedBarrierAvoidanceMid == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive"), partBarrierAvoidanceMid > 0, processedBarrierAvoidanceMid == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1195,7 +1357,7 @@ end
 
 rule "Rule 79 Set text for SkiddingHi if driver is agresive"
 	when
-		m: Message( typeOfDriver in ("border", "risk", "agresive"), partSkiddingHi/total > eventOfHighImportance, processedSkiddingHi == "No" )
+		m: Message( typeOfDriver in ("border", "risk", "agresive"), partSkiddingHi > 0, processedSkiddingHi == "No" )
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
@@ -1293,7 +1455,8 @@ rule "Rule 84 Set text for CorneringHi over limit for extreme drivers"
 		content[1] = m.getPartCorneringHi();
 		content[2] = df.format(((m.getPartCorneringHi() - m.getLimit()) / m.getLimit())*100);
 		content[3] = m.getPartCorneringHi() - m.getLimit();
-		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		System.out.println("vozac je " + m.getDriverId() + " i njegov limit je " + m.getLimit()); 
+		// System.out.println("Ukupan broj dogadjaja 'Cornering severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
 		
 		wizard.addTextVeryNegative("Rule 84 Set text for CorneringHi over limit for extreme drivers", content);
 		m.setProcessedCorneringHi("Yes");
@@ -1311,7 +1474,7 @@ rule "Rule 85 Set text for CorneringMid over limit for extreme drivers"
 		content[1] = m.getPartCorneringMid();
 		content[2] = df.format(((m.getPartCorneringMid() - m.getLimit())/ m.getLimit())*100);
 		content[3] = m.getPartCorneringMid() - m.getLimit();
-		System.out.println("Ukupan broj dogadjaja 'Cornering severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		// System.out.println("Ukupan broj dogadjaja 'Cornering severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
 		
 		wizard.addTextVeryNegative("Rule 85 Set text for CorneringMid over limit for extreme drivers", content);
 		m.setProcessedCorneringMid("Yes");
@@ -1322,14 +1485,15 @@ rule "Rule 86 Set text for Speed limit over limit for extreme drivers"
 	when
 		m: Message( typeOfDriver == "extreme", partSpeedLimit > limit, processedSpeedLimit == "No" )
 	then
+		// System.out.println("Ukupan broj dogadjaja 'Speed limit notification' iznosi");
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumSpeedLimit();
 		content[1] = m.getPartSpeedLimit();
 		content[2] = df.format(((m.getPartSpeedLimit() - m.getLimit()) / m.getLimit())*100);
 		content[3] = m.getPartSpeedLimit() - m.getLimit();
-		System.out.println("Ukupan broj dogadjaja 'Speed limit notification' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
+		// System.out.println("Ukupan broj dogadjaja 'Speed limit notification' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
 		
 		wizard.addTextVeryNegative("Rule 86 Set text for Speed limit over limit for extreme drivers", content);
 		m.setProcessedSpeedLimit("Yes");
@@ -1342,7 +1506,7 @@ rule "Rule 87 Set text for AbruptTurningHi over limit for extreme drivers"
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumHiAbruptTurning();
 		content[1] = m.getPartAbruptTurningHi();
 		content[2] = df.format(((m.getPartAbruptTurningHi() - m.getLimit()) / m.getLimit())*100);
@@ -1360,7 +1524,7 @@ rule "Rule 88 Set text for AggressiveLaneChangeHi over limit for extreme drivers
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumHiAggressiveLaneChange();
 		content[1] = m.getPartAggressiveLaneChangeHi();
 		content[2] = df.format(((m.getPartAggressiveLaneChangeHi() - m.getLimit()) / m.getLimit())*100);
@@ -1378,7 +1542,7 @@ rule "Rule 89 Set text for AggressiveLaneChangeMid over limit for extreme driver
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumMidAggressiveLaneChange();
 		content[1] = m.getPartAggressiveLaneChangeMid();
 		content[2] = df.format(((m.getPartAggressiveLaneChangeMid() - m.getLimit())/ m.getLimit())*100);
@@ -1396,12 +1560,11 @@ rule "Rule 90 Set text for BarrierAvoidanceHi over limit for extreme drivers"
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumHiBarrierAvoidance();
 		content[1] = m.getPartBarrierAvoidanceHi();
 		content[2] = df.format(((m.getPartBarrierAvoidanceHi() - m.getLimit()) / m.getLimit())*100);
 		content[3] = m.getPartBarrierAvoidanceHi() - m.getLimit();
-		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
 		
 		wizard.addTextVeryNegative("Rule 90 Set text for BarrierAvoidanceHi over limit for extreme drivers", content);
 		m.setProcessedBarrierAvoidanceHi("Yes");
@@ -1414,15 +1577,14 @@ rule "Rule 91 Set text for BarrierAvoidanceMid over limit for extreme drivers"
 	then
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(2);
-		Object [] content = new Object[3];
+		Object [] content = new Object[4];
 		content[0] = m.getNumMidBarrierAvoidance();
 		content[1] = m.getPartBarrierAvoidanceMid();
 		content[2] = df.format(((m.getPartBarrierAvoidanceMid() - m.getLimit())/ m.getLimit())*100);
 		content[3] = m.getPartBarrierAvoidanceMid() - m.getLimit();
-		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
 		
 		wizard.addTextVeryNegative("Rule 91 Set text for BarrierAvoidanceMid over limit for extreme drivers", content);
-		m.setProcessedBarrierAvoidanceHi("Yes");
+		m.setProcessedBarrierAvoidanceMid("Yes");
 		update(m);
 end 
 
@@ -1437,7 +1599,6 @@ rule "Rule 92 Set text for SkiddingHi over limit for extreme drivers"
 		content[1] = m.getPartSkiddingHi();
 		content[2] = df.format(((m.getPartSkiddingHi() - m.getLimit()) / m.getLimit())*100);
 		content[3] = m.getPartSkiddingHi() - m.getLimit();
-		System.out.println("Ukupan broj dogadjaja 'Vehicle skidding severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Kako je suma ovih bodova veca za " + content[2] + "% od ukupnog dozvoljenog limita, tj. prelazi limit za " + content[3] + " bodova. Ovo pokazuje da je nasa tvrdnja da je ovaj vozac ekstreman u potpunosti opravdana");
 		
 		wizard.addTextVeryNegative("Rule 92 Set text for SkiddingHi over limit for extreme drivers", content);
 		m.setProcessedSkiddingHi("Yes");
@@ -1556,7 +1717,6 @@ rule "Rule 99 Set text for Speed limit below the limit for extreme drivers"
 		content[0] = m.getNumSpeedLimit();
 		content[1] = m.getPartSpeedLimit();
 		content[2] = df.format((m.getPartSpeedLimit() / m.getLimit())*100);
-		System.out.println("Ukupan broj dogadjaja 'Speed limit notification' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
 		
 		wizard.addTextNegative("Rule 99 Set text for Speed limit below the limit for extreme drivers", content);
 		m.setProcessedSpeedLimit("Yes");
@@ -1573,7 +1733,6 @@ rule "Rule 100 Set text for AbruptTurningHi below the limit for extreme drivers"
 		content[0] = m.getNumHiAbruptTurning();
 		content[1] = m.getPartAbruptTurningHi();
 		content[2] = df.format((m.getPartAbruptTurningHi() / m.getLimit())*100);
-		System.out.println("Ukupan broj dogadjaja 'Abrupt turning severity level Hi' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
 		
 		wizard.addTextNegative("Rule 100 Set text for AbruptTurningHi below the limit for extreme drivers", content);
 		m.setProcessedAbruptTurningHi("Yes");
@@ -1644,7 +1803,7 @@ rule "Rule 104 Set text for BarrierAvoidanceMid below the limit for extreme driv
 		System.out.println("Ukupan broj dogadjaja 'Barrier avoidance severity level Mid' iznosi: " + content[0] + " koji na ukupnu predjenu kilometrazu iznosi " + content[1] + " negativnih bodova. Suma ovih bodova ucestvuje u ukupnom limitu sa " + content[2] + "%, sto podrzava tvrdnju da je ovaj vozac ekstreman.");
 		
 		wizard.addTextNegative("Rule 104 Set text for BarrierAvoidanceMid below the limit for extreme drivers", content);
-		m.setProcessedBarrierAvoidanceHi("Yes");
+		m.setProcessedBarrierAvoidanceMid("Yes");
 		update(m);
 end 
 
@@ -1673,7 +1832,6 @@ rule "Rule 106 Additionally conclusion about speeding"
 		  Message( processedAccMid == "Yes", processedSpeedLimit == "Yes" ) or
 		  Message( processedAccHi == "Yes", processedAccMid == "Yes", processedSpeedLimit == "Yes" ) )
 	then
-		System.out.println("Ocigledno je da ovaj vozac voli da vozi brzo. Treba delovati savetodavno da smanji brzinu prilikom voznje kako bi se smanjili i negativni poeni koje on pravi ovakvim ponasanjem");
 		
 		wizard.addText("Rule 106 Additionally conclusion about speeding", null);
 		m.setAdditionallyConclusion1("Yes");
@@ -1689,7 +1847,6 @@ rule "Rule 107 Additionally conclusion about avoidance"
 		    Message( processedBarrierAvoidanceHi == "Yes" || processedBarrierAvoidanceMid == "Yes" ) )
 		)
 	then
-		System.out.println("Ovaj vozac je ocigledno nepazljiv prilikom voznje. Trebalo bi ga savetovati da vodi vise racuna prilikom voznje kako bi smanjio broj negativnih poena");
 
 		wizard.addText("Rule 107 Additionally conclusion about avoidance", null);
 		m.setAdditionallyConclusion2("Yes");
@@ -1705,7 +1862,6 @@ rule "Rule 108 Additionally conclusion about cornering"
 		    Message( typeOfDriver in ("ok", "border", "risk", "agresive"), processedAbruptTurningHi == "Yes" || processedSkiddingHi == "Yes") )
 	    )	
 	then
-		System.out.println("Vozac ocigledno voli da rizikuje u krivini. Trebalo bi ga savetovati da malo laganije ulazi u krivinu kako bi smanjio ukupan broj negativnih bodova.");
 		
 		wizard.addText("Rule 108 Additionally conclusion about cornering", null);
 		m.setAdditionallyConclusion3("Yes");

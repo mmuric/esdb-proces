@@ -20,6 +20,7 @@ import org.goodoldai.jeff.wizard.JEFFWizard;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
@@ -29,7 +30,6 @@ import sun.misc.IOUtils;
 
 import com.execute.net.NetClient;
 import com.execute.obj.Message;
-import com.thoughtworks.xstream.core.util.Base64Encoder;
 
 
 /**
@@ -37,7 +37,11 @@ import com.thoughtworks.xstream.core.util.Base64Encoder;
  */
 public class DroolsTest {
 
+	private static JSONObject config;
+	
     public static final void main(String[] args) {
+    	
+    	getConfig();
     	
     	JEFFWizard wizard;
     	JSONParser parser = new JSONParser();
@@ -56,13 +60,14 @@ public class DroolsTest {
     		Iterator<String> iterator = msg.iterator();
     		while (iterator.hasNext()) {
     			String client_id = iterator.next();
-    			String route = "/api/model/driving-behaviour/method/get-all-event/id_client/" + client_id;
+    			String route = "/api/model/driving-behaviour/method/get-all-event/id_client/" + client_id + "/month/" + 5;
     			
     			// postavi novu rutu
     			rest.setRoute(route);
     			String result = rest.triggeredRest();
     			if(result.isEmpty()) throw new Exception("no more messages");
     			JSONObject collection = (JSONObject) parser.parse(result);
+    			if((boolean) collection.get("responce") == false) throw new Exception("no more messages");
     			JSONObject objs = (JSONObject) collection.get("result");
     			Iterator<JSONObject> iterator2 = objs.values().iterator();
     			
@@ -74,6 +79,8 @@ public class DroolsTest {
     				Message message = new Message();
     	            message.setRestData(iterator2.next());
     	            
+    	            System.out.println("Driver id\t" + message.getDriverId());
+    	            
     	            wizard = getJEFFWizardWithInternationalization();
     	            wizard.createExplanation();
     	            
@@ -81,24 +88,30 @@ public class DroolsTest {
     	            kSession.insert(message);
     	            kSession.fireAllRules();
     	
-    	            // String filename = message.getDriverId() + ".pdf";
-    	            // wizard.generatePDFReport(filename, true);
-
     	            String filename = "xml-report-" + message.getDriverId() + ".xml";
-    	            wizard.generateXMLReport(filename, false);
+    	            wizard.generateXMLReport(filename, true);
     	            
+    	            String[] paramName = new String[4];
+    	            String[] paramVal = new String[4];
     	            
-    	            route = "/api/model/driving-behaviour/method/save-results/id_client/" + client_id + "/driver/" + message.getDateFrom() + "/xml_file/" + executeCommand(filename); 
+    	            paramName[0] = "id_client"; 
+    	            paramVal[0] = client_id;
+    	            paramName[1] = "driver"; 
+    	            paramVal[1] = message.getDriverId();
+    	            paramName[2] = "datetime_triggered"; 
+    	            paramVal[2] = "2014-05-31";
 
-    	            rest.setRoute(route);
-        			System.out.println(rest.triggeredRest());
+    	            paramName[3] = "xml_file"; 
+    	            paramVal[3] = executeCommand(filename);
+    	            
+    	            rest.httpPost("/api/model/driving-behaviour/method/save-results", paramName, paramVal);
         			
         			File file = new File(filename);
         			file.delete();
-        			
-//        			System.exit(0);
     			}    			
     			
+    			System.out.println("IZLAZIM");
+    			System.exit(0);
     			
     			System.out.println("\n\n");
     			
@@ -139,6 +152,25 @@ public class DroolsTest {
  
 		return output.toString().replaceAll("[^\\x20-\\x7e]", "");
  
+	}
+    
+    public static void getConfig() {
+		JSONParser parser = new JSONParser();
+		
+		try {
+			String loader = System.getProperty("user.dir");
+			String file_path = loader+"/resources/test.json";
+			Object obj = parser.parse(new FileReader(file_path));
+			config = (JSONObject) obj;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
  
     
