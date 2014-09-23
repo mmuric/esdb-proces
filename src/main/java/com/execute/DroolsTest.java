@@ -41,7 +41,7 @@ public class DroolsTest {
 	
     public static final void main(String[] args) {
     	
-    	getConfig();
+//    	getConfig();
     	
     	JEFFWizard wizard;
     	JSONParser parser = new JSONParser();
